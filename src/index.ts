@@ -1,4 +1,4 @@
-interface OptionsType<EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>> {
+export interface OptionsType<EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>> {
   cachedEvents?: (keyof EventsType)[]
 }
 
