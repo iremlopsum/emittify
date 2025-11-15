@@ -14,7 +14,7 @@
     "url": "git+https://github.com/colorfy-software/emittify.git"
   },
   "peerDependencies": {
-    "react": "^19.0.0"
+    "react": "*"
   },
   "types": "dist/index.d.ts",
   "files": [
