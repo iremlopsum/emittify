@@ -5,8 +5,10 @@ import { Label } from '../ui/label'
 import { Switch } from '../ui/switch'
 import { ExampleWrapper } from '../ExampleWrapper'
 
+import { exampleEmitter } from '../../../events'
+
 export function ScrollParallaxExample() {
-  const [scrollProgress, setScrollProgress] = useState(0)
+  const scrollData = exampleEmitter.useEventListener('scroll-position', { y: 0, progress: 0 })
   const [eventCount, setEventCount] = useState(0)
   const [throttle, setThrottle] = useState(true)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -19,6 +21,7 @@ export function ScrollParallaxExample() {
     const handleScroll = () => {
       const scrollHeight = container.scrollHeight - container.clientHeight
       const progress = (container.scrollTop / scrollHeight) * 100
+      const y = container.scrollTop
 
       if (throttle) {
         const now = Date.now()
@@ -26,7 +29,7 @@ export function ScrollParallaxExample() {
         lastEmit.current = now
       }
 
-      setScrollProgress(progress)
+      exampleEmitter.send('scroll-position', { y, progress })
       setEventCount(prev => prev + 1)
     }
 
@@ -34,8 +37,8 @@ export function ScrollParallaxExample() {
     return () => container.removeEventListener('scroll', handleScroll)
   }, [throttle])
 
-  const bgOpacity = scrollProgress / 100
-  const bgPosition = scrollProgress * 2
+  const bgOpacity = scrollData.progress / 100
+  const bgPosition = scrollData.progress * 2
 
   return (
     <ExampleWrapper
@@ -47,7 +50,7 @@ export function ScrollParallaxExample() {
           <div className="space-y-1">
             <div className="text-sm">
               <span className="text-gray-400">Scroll Progress:</span>{' '}
-              <span className="text-cyan-400">{scrollProgress.toFixed(1)}%</span>
+              <span className="text-cyan-400">{scrollData.progress.toFixed(1)}%</span>
             </div>
             <div className="text-sm">
               <span className="text-gray-400">Events emitted:</span>{' '}
@@ -66,7 +69,7 @@ export function ScrollParallaxExample() {
         <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-linear-to-r from-purple-500 via-cyan-500 to-pink-500"
-            style={{ width: `${scrollProgress}%` }}
+            style={{ width: `${scrollData.progress}%` }}
             transition={{ duration: 0.1 }}
           />
         </div>
@@ -82,7 +85,7 @@ export function ScrollParallaxExample() {
           }}>
           <div className="p-8 space-y-8">
             {[...Array(10)].map((_, i) => {
-              const offset = ((scrollProgress - i * 10) / 100) * 50
+              const offset = ((scrollData.progress - i * 10) / 100) * 50
               return (
                 <motion.div
                   key={i}
@@ -112,12 +115,13 @@ export function ScrollParallaxExample() {
         </div>
 
         <div className="bg-[#1e1e2e] rounded-lg p-4 border border-gray-700">
-          <code className="text-sm text-gray-300">
-            <span className="text-gray-500">// High-frequency scroll events</span>
+          <code className="text-sm text-gray-300 whitespace-pre">
+            <span className="text-gray-500">// High-frequency scroll events with deduplication</span>
             {'\n'}
             emitter.<span className="text-cyan-400">send</span>(
-            <span className="text-green-400">'scroll-position'</span>, {'{'} progress:{' '}
-            <span className="text-orange-400">{scrollProgress.toFixed(1)}</span> {'}'})
+            <span className="text-green-400">'scroll-position'</span>, {'{'} y:{' '}
+            <span className="text-orange-400">{scrollData.y.toFixed(0)}</span>, progress:{' '}
+            <span className="text-orange-400">{scrollData.progress.toFixed(1)}</span> {'}'})
           </code>
         </div>
       </div>
