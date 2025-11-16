@@ -7,9 +7,7 @@ import Emitter from '../index'
 /**
  * Creates a test emitter with a predefined event type structure
  */
-export function createTestEmitter<T extends Record<keyof T, T[keyof T]>>(
-  options?: { cachedEvents?: (keyof T)[] }
-) {
+export function createTestEmitter<T extends Record<keyof T, T[keyof T]>>(options?: { cachedEvents?: (keyof T)[] }) {
   return new Emitter<T>(options)
 }
 
@@ -39,26 +37,18 @@ export function wait(ms: number) {
  */
 export function createMultipleListeners<
   EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>,
-  K extends keyof EventsType
->(
-  emitter: Emitter<EventsType>,
-  eventKey: K,
-  count: number
-) {
+  K extends keyof EventsType,
+>(emitter: Emitter<EventsType>, eventKey: K, count: number) {
   const callbacks = Array.from({ length: count }, () => createMockCallback<EventsType[K]>())
   const listeners = callbacks.map(callback => emitter.listen(eventKey, callback))
-  
+
   return { callbacks, listeners }
 }
 
 /**
  * Helper to test if a callback was called with specific arguments
  */
-export function expectCallbackCalledWith<T>(
-  callback: jest.Mock,
-  expectedValue: T,
-  times: number = 1
-) {
+export function expectCallbackCalledWith<T>(callback: jest.Mock, expectedValue: T, times: number = 1) {
   expect(callback).toHaveBeenCalledTimes(times)
   expect(callback).toHaveBeenCalledWith(expectedValue)
 }
@@ -68,20 +58,20 @@ export function expectCallbackCalledWith<T>(
  */
 export function createStressTestScenario<
   EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>,
-  K extends keyof EventsType
+  K extends keyof EventsType,
 >(
   emitter: Emitter<EventsType>,
   eventKey: K,
   listenerCount: number,
   eventCount: number,
-  getValue: (index: number) => EventsType[K]
+  getValue: (index: number) => EventsType[K],
 ) {
   const { callbacks, listeners } = createMultipleListeners(emitter, eventKey, listenerCount)
-  
+
   for (let i = 0; i < eventCount; i++) {
     emitter.send(eventKey, getValue(i))
   }
-  
+
   return { callbacks, listeners }
 }
 
@@ -114,7 +104,7 @@ export function createCommonTestEmitter() {
     'object-event': { id: number; value: string }
     'array-event': number[]
   }
-  
+
   return new Emitter<CommonEvents>()
 }
 
@@ -123,29 +113,24 @@ export function createCommonTestEmitter() {
  */
 export function testCacheBehavior<
   EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>,
-  K extends keyof EventsType
->(
-  emitter: Emitter<EventsType>,
-  eventKey: K,
-  value: EventsType[K],
-  fallbackValue?: EventsType[K]
-) {
+  K extends keyof EventsType,
+>(emitter: Emitter<EventsType>, eventKey: K, value: EventsType[K], fallbackValue?: EventsType[K]) {
   // Should return fallback before sending
   if (fallbackValue !== undefined) {
     expect(emitter.getCache(eventKey, fallbackValue)).toEqual(fallbackValue)
   } else {
     expect(emitter.getCache(eventKey)).toBeUndefined()
   }
-  
+
   // Send event
   emitter.send(eventKey, value)
-  
+
   // Should return cached value
   expect(emitter.getCache(eventKey, fallbackValue)).toEqual(value)
-  
+
   // Clear cache
   emitter.clearCache(eventKey)
-  
+
   // Should return fallback again
   if (fallbackValue !== undefined) {
     expect(emitter.getCache(eventKey, fallbackValue)).toEqual(fallbackValue)
@@ -159,17 +144,13 @@ export function testCacheBehavior<
  */
 export function testListenerLifecycle<
   EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>,
-  K extends keyof EventsType
->(
-  emitter: Emitter<EventsType>,
-  eventKey: K,
-  testValue: EventsType[K]
-) {
+  K extends keyof EventsType,
+>(emitter: Emitter<EventsType>, eventKey: K, testValue: EventsType[K]) {
   const callback = createMockCallback<EventsType[K]>()
-  
+
   // Register listener
   const listener = emitter.listen(eventKey, callback)
-  
+
   // Verify listener object
   expect(listener).toHaveProperty('id')
   expect(listener).toHaveProperty('event')
@@ -177,18 +158,18 @@ export function testListenerLifecycle<
   expect(listener.event).toBe(eventKey)
   expect(typeof listener.id).toBe('string')
   expect(typeof listener.clearListener).toBe('function')
-  
+
   // Test callback is called
   emitter.send(eventKey, testValue)
   expectCallbackCalledWith(callback, testValue, 1)
-  
+
   // Clear listener
   listener.clearListener()
-  
+
   // Verify callback is not called after clearing
   emitter.send(eventKey, testValue)
   expect(callback).toHaveBeenCalledTimes(1) // Still 1, not 2
-  
+
   return listener
 }
 
@@ -214,16 +195,13 @@ export const testDataGenerators = {
     value: Math.random().toString(36).substring(7),
     timestamp: Date.now(),
   }),
-  randomArray: (length: number = 10) =>
-    Array.from({ length }, () => Math.floor(Math.random() * 100)),
+  randomArray: (length: number = 10) => Array.from({ length }, () => Math.floor(Math.random() * 100)),
 }
 
 /**
  * Type guard to check if a value is a listener object
  */
-export function isListener<T>(
-  value: any
-): value is { id: string; event: T; clearListener: () => void } {
+export function isListener<T>(value: any): value is { id: string; event: T; clearListener: () => void } {
   return (
     value &&
     typeof value === 'object' &&
@@ -232,4 +210,3 @@ export function isListener<T>(
     'event' in value
   )
 }
-

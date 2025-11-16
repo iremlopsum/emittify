@@ -19,15 +19,14 @@ declare module '@testing-library/react' {
     options?: {
       timeout?: number
       interval?: number
-    }
+    },
   ): Promise<T>
-  
+
   export const screen: {
     getByTestId: (id: string) => HTMLElement
     queryByTestId: (id: string) => HTMLElement | null
     findByTestId: (id: string) => Promise<HTMLElement>
   }
-  
+
   export function act(callback: () => void | Promise<void>): Promise<void>
 }
-

@@ -870,10 +870,10 @@ describe('Emitter', () => {
   describe('Deduplication with deep comparison', () => {
     it('should emit first event always (no previous value)', () => {
       interface Events {
-        'data': { count: number }
+        data: { count: number }
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
@@ -886,15 +886,15 @@ describe('Emitter', () => {
 
     it('should block identical values with deep comparison', () => {
       interface Events {
-        'user': { id: number; name: string; settings: { theme: string } }
+        user: { id: number; name: string; settings: { theme: string } }
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'user', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'user', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
       emitter.listen('user', callback)
-      
+
       const userData = { id: 1, name: 'John', settings: { theme: 'dark' } }
       emitter.send('user', userData)
       emitter.send('user', { id: 1, name: 'John', settings: { theme: 'dark' } }) // Same value
@@ -906,15 +906,15 @@ describe('Emitter', () => {
 
     it('should emit when nested values change with deep comparison', () => {
       interface Events {
-        'config': { api: { url: string; timeout: number } }
+        config: { api: { url: string; timeout: number } }
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'config', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'config', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
       emitter.listen('config', callback)
-      
+
       emitter.send('config', { api: { url: 'api.com', timeout: 5000 } })
       emitter.send('config', { api: { url: 'api.com', timeout: 5000 } }) // Same
       emitter.send('config', { api: { url: 'api.com', timeout: 3000 } }) // Different timeout
@@ -926,15 +926,15 @@ describe('Emitter', () => {
 
     it('should handle arrays with deep comparison', () => {
       interface Events {
-        'list': number[]
+        list: number[]
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'list', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'list', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
       emitter.listen('list', callback)
-      
+
       emitter.send('list', [1, 2, 3])
       emitter.send('list', [1, 2, 3]) // Same
       emitter.send('list', [1, 2, 3, 4]) // Different
@@ -946,15 +946,15 @@ describe('Emitter', () => {
 
     it('should handle primitive values with deep comparison', () => {
       interface Events {
-        'counter': number
+        counter: number
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'counter', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'counter', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
       emitter.listen('counter', callback)
-      
+
       emitter.send('counter', 1)
       emitter.send('counter', 1) // Same
       emitter.send('counter', 2) // Different
@@ -968,15 +968,15 @@ describe('Emitter', () => {
   describe('Deduplication with shallow comparison', () => {
     it('should block identical shallow objects', () => {
       interface Events {
-        'data': { count: number; label: string }
+        data: { count: number; label: string }
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }],
       })
       const callback = jest.fn()
 
       emitter.listen('data', callback)
-      
+
       emitter.send('data', { count: 1, label: 'test' })
       emitter.send('data', { count: 1, label: 'test' }) // Same
 
@@ -986,15 +986,15 @@ describe('Emitter', () => {
 
     it('should emit when shallow properties change', () => {
       interface Events {
-        'data': { count: number; label: string }
+        data: { count: number; label: string }
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }],
       })
       const callback = jest.fn()
 
       emitter.listen('data', callback)
-      
+
       emitter.send('data', { count: 1, label: 'test' })
       emitter.send('data', { count: 2, label: 'test' }) // Different count
 
@@ -1005,18 +1005,18 @@ describe('Emitter', () => {
 
     it('should NOT detect nested changes with shallow comparison', () => {
       interface Events {
-        'config': { settings: { theme: string } }
+        config: { settings: { theme: string } }
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'config', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'config', comparison: 'shallow' }],
       })
       const callback = jest.fn()
 
       emitter.listen('config', callback)
-      
+
       const settings1 = { theme: 'dark' }
       const settings2 = { theme: 'light' }
-      
+
       emitter.send('config', { settings: settings1 })
       emitter.send('config', { settings: settings2 }) // Different nested object reference
 
@@ -1027,15 +1027,15 @@ describe('Emitter', () => {
 
     it('should handle primitives with shallow comparison', () => {
       interface Events {
-        'status': string
+        status: string
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'status', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'status', comparison: 'shallow' }],
       })
       const callback = jest.fn()
 
       emitter.listen('status', callback)
-      
+
       emitter.send('status', 'active')
       emitter.send('status', 'active') // Same
       emitter.send('status', 'inactive') // Different
@@ -1049,16 +1049,16 @@ describe('Emitter', () => {
   describe('Deduplication with multiple events', () => {
     it('should handle multiple deduplicated events independently', () => {
       interface Events {
-        'counter': number
-        'user': { id: number; name: string }
-        'status': string
+        counter: number
+        user: { id: number; name: string }
+        status: string
       }
       const emitter = new Emitter<Events>({
         deduplicatedEvents: [
           { event: 'counter', comparison: 'shallow' },
           { event: 'user', comparison: 'deep' },
-          { event: 'status', comparison: 'shallow' }
-        ]
+          { event: 'status', comparison: 'shallow' },
+        ],
       })
       const counterCallback = jest.fn()
       const userCallback = jest.fn()
@@ -1067,17 +1067,17 @@ describe('Emitter', () => {
       emitter.listen('counter', counterCallback)
       emitter.listen('user', userCallback)
       emitter.listen('status', statusCallback)
-      
+
       // Counter
       emitter.send('counter', 1)
       emitter.send('counter', 1) // Blocked
       emitter.send('counter', 2) // Emitted
-      
+
       // User
       emitter.send('user', { id: 1, name: 'John' })
       emitter.send('user', { id: 1, name: 'John' }) // Blocked
       emitter.send('user', { id: 1, name: 'Jane' }) // Emitted
-      
+
       // Status
       emitter.send('status', 'active')
       emitter.send('status', 'active') // Blocked
@@ -1089,21 +1089,21 @@ describe('Emitter', () => {
 
     it('should not affect non-deduplicated events', () => {
       interface Events {
-        'deduplicated': number
-        'normal': number
+        deduplicated: number
+        normal: number
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'deduplicated', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'deduplicated', comparison: 'deep' }],
       })
       const deduplicatedCallback = jest.fn()
       const normalCallback = jest.fn()
 
       emitter.listen('deduplicated', deduplicatedCallback)
       emitter.listen('normal', normalCallback)
-      
+
       emitter.send('deduplicated', 1)
       emitter.send('deduplicated', 1) // Blocked
-      
+
       emitter.send('normal', 1)
       emitter.send('normal', 1) // NOT blocked
 
@@ -1115,20 +1115,20 @@ describe('Emitter', () => {
   describe('Deduplication with cachedEvents', () => {
     it('should work together with cached events', () => {
       interface Events {
-        'data': { value: number }
+        data: { value: number }
       }
       const emitter = new Emitter<Events>({
         cachedEvents: ['data'],
-        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
       emitter.send('data', { value: 1 })
       emitter.send('data', { value: 1 }) // Blocked from emission
-      
+
       // Cache should be updated even when emission is blocked
       expect(emitter.getCache('data')).toEqual({ value: 1 })
-      
+
       // New listener should get cached value
       emitter.listen('data', callback)
       expect(callback).toHaveBeenCalledWith({ value: 1 })
@@ -1136,30 +1136,30 @@ describe('Emitter', () => {
 
     it('should cache new values even when deduplicated emission is blocked', () => {
       interface Events {
-        'counter': number
+        counter: number
       }
       const emitter = new Emitter<Events>({
         cachedEvents: ['counter'],
-        deduplicatedEvents: [{ event: 'counter', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'counter', comparison: 'shallow' }],
       })
 
       emitter.send('counter', 5)
       expect(emitter.getCache('counter')).toBe(5)
-      
+
       emitter.send('counter', 5) // Blocked
       expect(emitter.getCache('counter')).toBe(5) // Still cached
-      
+
       emitter.send('counter', 10)
       expect(emitter.getCache('counter')).toBe(10)
     })
 
     it('should deliver cached value to new listeners even if last send was deduplicated', () => {
       interface Events {
-        'status': string
+        status: string
       }
       const emitter = new Emitter<Events>({
         cachedEvents: ['status'],
-        deduplicatedEvents: [{ event: 'status', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'status', comparison: 'shallow' }],
       })
       const callback1 = jest.fn()
       const callback2 = jest.fn()
@@ -1167,9 +1167,9 @@ describe('Emitter', () => {
       emitter.listen('status', callback1)
       emitter.send('status', 'active')
       emitter.send('status', 'active') // Deduplicated, but still cached
-      
+
       emitter.listen('status', callback2) // New listener
-      
+
       expect(callback1).toHaveBeenCalledTimes(1) // Only first emission
       expect(callback2).toHaveBeenCalledTimes(1) // Gets cached value
       expect(callback2).toHaveBeenCalledWith('active')
@@ -1179,17 +1179,17 @@ describe('Emitter', () => {
   describe('clearDeduplicationCache()', () => {
     it('should clear previous value for specific event', () => {
       interface Events {
-        'counter': number
+        counter: number
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'counter', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'counter', comparison: 'shallow' }],
       })
       const callback = jest.fn()
 
       emitter.listen('counter', callback)
       emitter.send('counter', 1)
       emitter.send('counter', 1) // Blocked
-      
+
       emitter.clearDeduplicationCache('counter')
       emitter.send('counter', 1) // Should emit now (no previous value)
 
@@ -1204,20 +1204,20 @@ describe('Emitter', () => {
       const emitter = new Emitter<Events>({
         deduplicatedEvents: [
           { event: 'event-1', comparison: 'shallow' },
-          { event: 'event-2', comparison: 'shallow' }
-        ]
+          { event: 'event-2', comparison: 'shallow' },
+        ],
       })
       const callback1 = jest.fn()
       const callback2 = jest.fn()
 
       emitter.listen('event-1', callback1)
       emitter.listen('event-2', callback2)
-      
+
       emitter.send('event-1', 1)
       emitter.send('event-2', 'test')
-      
+
       emitter.clearDeduplicationCache('event-1')
-      
+
       emitter.send('event-1', 1) // Should emit
       emitter.send('event-2', 'test') // Still blocked
 
@@ -1227,7 +1227,7 @@ describe('Emitter', () => {
 
     it('should handle clearing non-existent cache', () => {
       interface Events {
-        'event': number
+        event: number
       }
       const emitter = new Emitter<Events>()
 
@@ -1248,8 +1248,8 @@ describe('Emitter', () => {
         deduplicatedEvents: [
           { event: 'event-1', comparison: 'shallow' },
           { event: 'event-2', comparison: 'deep' },
-          { event: 'event-3', comparison: 'shallow' }
-        ]
+          { event: 'event-3', comparison: 'shallow' },
+        ],
       })
       const callback1 = jest.fn()
       const callback2 = jest.fn()
@@ -1258,13 +1258,13 @@ describe('Emitter', () => {
       emitter.listen('event-1', callback1)
       emitter.listen('event-2', callback2)
       emitter.listen('event-3', callback3)
-      
+
       emitter.send('event-1', 1)
       emitter.send('event-2', 'test')
       emitter.send('event-3', true)
-      
+
       emitter.clearAllDeduplicationCache()
-      
+
       // All should emit again now
       emitter.send('event-1', 1)
       emitter.send('event-2', 'test')
@@ -1277,16 +1277,16 @@ describe('Emitter', () => {
 
     it('should not affect regular cache', () => {
       interface Events {
-        'data': string
+        data: string
       }
       const emitter = new Emitter<Events>({
         cachedEvents: ['data'],
-        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }],
       })
 
       emitter.send('data', 'value')
       emitter.clearAllDeduplicationCache()
-      
+
       expect(emitter.getCache('data')).toBe('value')
     })
   })
@@ -1294,10 +1294,10 @@ describe('Emitter', () => {
   describe('Edge cases for deduplication', () => {
     it('should handle null values', () => {
       interface Events {
-        'data': string | null
+        data: string | null
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
@@ -1313,10 +1313,10 @@ describe('Emitter', () => {
 
     it('should handle undefined values', () => {
       interface Events {
-        'data': string | undefined
+        data: string | undefined
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
@@ -1330,10 +1330,10 @@ describe('Emitter', () => {
 
     it('should handle empty objects', () => {
       interface Events {
-        'data': Record<string, never>
+        data: Record<string, never>
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
@@ -1346,10 +1346,10 @@ describe('Emitter', () => {
 
     it('should handle empty arrays', () => {
       interface Events {
-        'list': number[]
+        list: number[]
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'list', comparison: 'deep' }]
+        deduplicatedEvents: [{ event: 'list', comparison: 'deep' }],
       })
       const callback = jest.fn()
 
@@ -1362,10 +1362,10 @@ describe('Emitter', () => {
 
     it('should work with multiple listeners on same deduplicated event', () => {
       interface Events {
-        'data': number
+        data: number
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }],
       })
       const callback1 = jest.fn()
       const callback2 = jest.fn()
@@ -1374,7 +1374,7 @@ describe('Emitter', () => {
       emitter.listen('data', callback1)
       emitter.listen('data', callback2)
       emitter.listen('data', callback3)
-      
+
       emitter.send('data', 1)
       emitter.send('data', 1) // Blocked for all
 
@@ -1385,17 +1385,17 @@ describe('Emitter', () => {
 
     it('should handle listener added after first send', () => {
       interface Events {
-        'data': number
+        data: number
       }
       const emitter = new Emitter<Events>({
-        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }]
+        deduplicatedEvents: [{ event: 'data', comparison: 'shallow' }],
       })
       const callback1 = jest.fn()
       const callback2 = jest.fn()
 
       emitter.listen('data', callback1)
       emitter.send('data', 1)
-      
+
       emitter.listen('data', callback2) // New listener
       emitter.send('data', 1) // Blocked
 

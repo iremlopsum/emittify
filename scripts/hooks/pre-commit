@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Pre-commit hook
+# This hook will:
+# 1. Check TypeScript types
+# 2. Check code formatting with Prettier (if available)
+# 3. Run tests
+
+echo "🔍 Running pre-commit checks..."
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    if [ $1 -eq 0 ]; then
+        echo -e "${GREEN}✓ $2${NC}"
+    else
+        echo -e "${RED}✗ $2${NC}"
+    fi
+}
+
+# Store overall status
+OVERALL_STATUS=0
+
+# 1. Type checking
+echo ""
+echo -e "${YELLOW}📘 Checking TypeScript types...${NC}"
+npx tsc --noEmit
+TYPE_CHECK_STATUS=$?
+print_status $TYPE_CHECK_STATUS "Type checking"
+if [ $TYPE_CHECK_STATUS -ne 0 ]; then
+    OVERALL_STATUS=1
+fi
+
+# 2. Prettier formatting check (if prettier is available)
+echo ""
+echo -e "${YELLOW}💅 Checking code formatting...${NC}"
+if command -v npx &> /dev/null && npx prettier --version &> /dev/null; then
+    npx prettier --check "src/**/*.{ts,tsx,js,jsx}"
+    PRETTIER_STATUS=$?
+    print_status $PRETTIER_STATUS "Code formatting"
+    if [ $PRETTIER_STATUS -ne 0 ]; then
+        echo -e "${YELLOW}💡 Tip: Run 'npx prettier --write \"src/**/*.{ts,tsx,js,jsx}\"' to fix formatting${NC}"
+        OVERALL_STATUS=1
+    fi
+else
+    echo -e "${YELLOW}⚠ Prettier not found, skipping format check${NC}"
+fi
+
+# 3. Run tests
+echo ""
+echo -e "${YELLOW}🧪 Running tests...${NC}"
+npm test -- --passWithNoTests
+TEST_STATUS=$?
+print_status $TEST_STATUS "Tests"
+if [ $TEST_STATUS -ne 0 ]; then
+    OVERALL_STATUS=1
+fi
+
+# Final result
+echo ""
+if [ $OVERALL_STATUS -eq 0 ]; then
+    echo -e "${GREEN}✓ All pre-commit checks passed!${NC}"
+    exit 0
+else
+    echo -e "${RED}✗ Pre-commit checks failed. Please fix the issues above before committing.${NC}"
+    exit 1
+fi
+
