@@ -99,7 +99,7 @@ export function MouseTrailExample() {
         </div>
 
         <div className="bg-[#1e1e2e] rounded-lg p-4 border border-gray-700">
-          <code className="text-sm text-gray-300">
+          <code className="text-sm text-gray-300 whitespace-pre">
             <span className="text-purple-400">const</span> particles = emitter.
             <span className="text-cyan-400">useEventListener</span>(
             <span className="text-green-400">'mouse-particles'</span>, []){'\n'}

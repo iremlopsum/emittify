@@ -134,7 +134,7 @@ export function SmartNotificationsExample() {
                 initial={{ opacity: 0, x: 100, scale: 0.8 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 100, scale: 0.8 }}
-                className={`bg-gradient-to-br ${getColors(
+                className={`bg-linear-to-br ${getColors(
                   toast.type,
                 )} rounded-lg p-4 border shadow-lg pointer-events-auto`}>
                 <div className="flex items-start gap-3">
@@ -149,7 +149,7 @@ export function SmartNotificationsExample() {
         </div>
 
         <div className="bg-[#1e1e2e] rounded-lg p-4 border border-gray-700">
-          <code className="text-sm text-gray-300">
+          <code className="text-sm text-gray-300 whitespace-pre">
             <span className="text-purple-400">new</span> <span className="text-yellow-400">Emittify</span>({'{'}
             {'\n'}
             {'  '}

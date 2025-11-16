@@ -148,7 +148,7 @@ export function LiveStatsExample() {
         </AnimatePresence>
 
         <div className="bg-[#1e1e2e] rounded-lg p-4 border border-gray-700">
-          <code className="text-sm text-gray-300">
+          <code className="text-sm text-gray-300 whitespace-pre">
             <span className="text-purple-400">const</span> messages = emitter.
             <span className="text-cyan-400">useEventListener</span>(
             <span className="text-green-400">'stats-messages'</span>, 42){'\n'}
