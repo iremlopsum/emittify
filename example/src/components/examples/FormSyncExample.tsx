@@ -32,7 +32,7 @@ export function FormSyncExample() {
           {/* Form 1 */}
           <motion.div
             whileHover={{ scale: 1.01 }}
-            className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 rounded-lg p-6 border border-purple-500/30">
+            className="bg-linear-to-br from-purple-900/30 to-purple-800/20 rounded-lg p-6 border border-purple-500/30">
             <h4 className="mb-4 text-purple-300">Form A</h4>
             <div className="space-y-4">
               <div>
@@ -79,7 +79,7 @@ export function FormSyncExample() {
           {/* Form 2 */}
           <motion.div
             whileHover={{ scale: 1.01 }}
-            className="bg-gradient-to-br from-cyan-900/30 to-cyan-800/20 rounded-lg p-6 border border-cyan-500/30">
+            className="bg-linear-to-br from-cyan-900/30 to-cyan-800/20 rounded-lg p-6 border border-cyan-500/30">
             <h4 className="mb-4 text-cyan-300">Form B</h4>
             <div className="space-y-4">
               <div>

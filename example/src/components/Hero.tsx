@@ -54,7 +54,7 @@ export function Hero() {
             <span className="text-6xl inline-block">🛩</span>
           </div>
 
-          <h1 className="mb-6 bg-gradient-to-r from-purple-400 via-cyan-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="mb-6 bg-linear-to-r from-purple-400 via-cyan-400 to-pink-400 bg-clip-text text-transparent">
             Emittify
           </h1>
 
@@ -65,7 +65,7 @@ export function Hero() {
           <div className="flex flex-wrap gap-4 justify-center mb-16">
             <Button
               size="lg"
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+              className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
               <Github className="mr-2 h-5 w-5" />
               View on GitHub
             </Button>

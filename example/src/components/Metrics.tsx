@@ -25,7 +25,7 @@ export function Metrics() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0 }}
             whileHover={{ scale: 1.05 }}
-            className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 rounded-xl p-6 border border-purple-500/30 text-center">
+            className="bg-linear-to-br from-purple-900/30 to-purple-800/20 rounded-xl p-6 border border-purple-500/30 text-center">
             <Package className="h-8 w-8 mx-auto mb-3 text-purple-400" />
             <div className="text-3xl mb-2 text-purple-300">~2KB</div>
             <div className="text-sm text-gray-400">Gzipped Size</div>
@@ -37,7 +37,7 @@ export function Metrics() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
             whileHover={{ scale: 1.05 }}
-            className="bg-gradient-to-br from-cyan-900/30 to-cyan-800/20 rounded-xl p-6 border border-cyan-500/30 text-center">
+            className="bg-linear-to-br from-cyan-900/30 to-cyan-800/20 rounded-xl p-6 border border-cyan-500/30 text-center">
             <Zap className="h-8 w-8 mx-auto mb-3 text-cyan-400" />
             <div className="text-3xl mb-2 text-cyan-300">{'<1ms'}</div>
             <div className="text-sm text-gray-400">Event Emission</div>
@@ -49,7 +49,7 @@ export function Metrics() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
             whileHover={{ scale: 1.05 }}
-            className="bg-gradient-to-br from-pink-900/30 to-pink-800/20 rounded-xl p-6 border border-pink-500/30 text-center">
+            className="bg-linear-to-br from-pink-900/30 to-pink-800/20 rounded-xl p-6 border border-pink-500/30 text-center">
             <Shield className="h-8 w-8 mx-auto mb-3 text-pink-400" />
             <div className="text-3xl mb-2 text-pink-300">100%</div>
             <div className="text-sm text-gray-400">Type Safe</div>
@@ -61,7 +61,7 @@ export function Metrics() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
             whileHover={{ scale: 1.05 }}
-            className="bg-gradient-to-br from-green-900/30 to-green-800/20 rounded-xl p-6 border border-green-500/30 text-center">
+            className="bg-linear-to-br from-green-900/30 to-green-800/20 rounded-xl p-6 border border-green-500/30 text-center">
             <Star className="h-8 w-8 mx-auto mb-3 text-green-400" />
             <div className="text-3xl mb-2 text-green-300">Zero</div>
             <div className="text-sm text-gray-400">Dependencies</div>
@@ -74,7 +74,7 @@ export function Metrics() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-8 border border-gray-800">
+          className="bg-linear-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-8 border border-gray-800">
           <h3 className="mb-8 text-center">Bundle Size Comparison</h3>
 
           <div className="space-y-4">
@@ -99,7 +99,7 @@ export function Metrics() {
                     whileInView={{ width: `${(lib.size / 12) * 100}%` }}
                     viewport={{ once: true }}
                     transition={{ duration: 1, delay: index * 0.1 }}
-                    className={`h-full bg-gradient-to-r ${lib.color} flex items-center justify-end pr-3`}>
+                    className={`h-full bg-linear-to-r ${lib.color} flex items-center justify-end pr-3`}>
                     <span className="text-xs">{lib.size}KB</span>
                   </motion.div>
                 </div>

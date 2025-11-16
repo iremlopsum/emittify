@@ -22,7 +22,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0f] to-[#1a1a2e] text-white">
+    <div className="min-h-screen bg-linear-to-b from-[#0a0a0f] to-[#1a1a2e] text-white">
       <Hero />
       <FeaturesGrid />
       <Installation />

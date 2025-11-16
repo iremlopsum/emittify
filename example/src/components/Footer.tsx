@@ -18,7 +18,7 @@ export function Footer() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-4xl">🛩</span>
-                <h3 className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Emittify</h3>
+                <h3 className="bg-linear-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Emittify</h3>
               </div>
               <p className="text-gray-400 mb-4">
                 A tiny, TypeScript-first event emitter with caching, deduplication, and React hooks.

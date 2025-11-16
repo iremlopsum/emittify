@@ -54,7 +54,7 @@ export function ApiCards() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-6 border border-gray-800 hover:border-cyan-500/50 transition-all duration-300">
+              className="bg-linear-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-6 border border-gray-800 hover:border-cyan-500/50 transition-all duration-300">
               <h3 className="mb-2 text-cyan-400">{method.name}</h3>
               <code className="text-sm text-gray-500 block mb-4">{method.signature}</code>
               <p className="text-gray-400 mb-4">{method.description}</p>

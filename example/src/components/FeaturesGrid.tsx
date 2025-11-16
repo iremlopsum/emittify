@@ -65,9 +65,9 @@ export function FeaturesGrid() {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               whileHover={{ y: -4 }}
               className="group">
-              <div className="h-full bg-gradient-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-8 border border-gray-800 hover:border-purple-500/50 transition-all duration-300">
+              <div className="h-full bg-linear-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-8 border border-gray-800 hover:border-purple-500/50 transition-all duration-300">
                 <div className="mb-4 text-4xl">{feature.emoji}</div>
-                <h3 className="mb-3 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                <h3 className="mb-3 bg-linear-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                   {feature.title}
                 </h3>
                 <p className="text-gray-400">{feature.description}</p>

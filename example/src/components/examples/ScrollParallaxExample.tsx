@@ -65,7 +65,7 @@ export function ScrollParallaxExample() {
         {/* Progress Bar */}
         <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-purple-500 via-cyan-500 to-pink-500"
+            className="h-full bg-linear-to-r from-purple-500 via-cyan-500 to-pink-500"
             style={{ width: `${scrollProgress}%` }}
             transition={{ duration: 0.1 }}
           />

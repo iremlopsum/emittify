@@ -25,7 +25,7 @@ export function Installation() {
           <h2 className="text-center mb-8">Installation</h2>
 
           <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-cyan-500 to-pink-500 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
+            <div className="absolute -inset-0.5 bg-linear-to-r from-purple-500 via-cyan-500 to-pink-500 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
             <div className="relative bg-[#1e1e2e] rounded-lg p-6 border border-gray-800 flex items-center justify-between">
               <code className="text-lg text-gray-300">{installCommand}</code>
               <Button size="sm" variant="ghost" onClick={handleCopy} className="hover:bg-gray-700">

@@ -77,26 +77,26 @@ export function ThemeSyncExample() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className={`bg-gradient-to-br ${current.bg} rounded-lg p-8 border border-gray-700`}>
+          className={`bg-linear-to-br ${current.bg} rounded-lg p-8 border border-gray-700`}>
           <div className={`${current.text} space-y-4`}>
-            <h3 className={`bg-gradient-to-r ${current.accent} bg-clip-text text-transparent`}>
+            <h3 className={`bg-linear-to-r ${current.accent} bg-clip-text text-transparent`}>
               Current Theme: {theme.charAt(0).toUpperCase() + theme.slice(1)}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <motion.div whileHover={{ scale: 1.05 }} className={`${current.card} rounded-lg p-4 border`}>
                 <div className="text-sm opacity-70 mb-2">Component A</div>
-                <div className={`h-12 rounded bg-gradient-to-r ${current.accent}`}></div>
+                <div className={`h-12 rounded bg-linear-to-r ${current.accent}`}></div>
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.05 }} className={`${current.card} rounded-lg p-4 border`}>
                 <div className="text-sm opacity-70 mb-2">Component B</div>
-                <div className={`h-12 rounded bg-gradient-to-r ${current.accent}`}></div>
+                <div className={`h-12 rounded bg-linear-to-r ${current.accent}`}></div>
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.05 }} className={`${current.card} rounded-lg p-4 border`}>
                 <div className="text-sm opacity-70 mb-2">Component C</div>
-                <div className={`h-12 rounded bg-gradient-to-r ${current.accent}`}></div>
+                <div className={`h-12 rounded bg-linear-to-r ${current.accent}`}></div>
               </motion.div>
             </div>
 
@@ -107,7 +107,7 @@ export function ThemeSyncExample() {
               </p>
               <div className="text-xs opacity-70">
                 Theme changes:{' '}
-                <span className={`font-mono bg-gradient-to-r ${current.accent} bg-clip-text text-transparent`}>
+                <span className={`font-mono bg-linear-to-r ${current.accent} bg-clip-text text-transparent`}>
                   {themeChanges}
                 </span>
               </div>
