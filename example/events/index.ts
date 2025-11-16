@@ -51,12 +51,10 @@ export interface ExampleEvents {
     timestamp: number
   }
 
-  // Notifications Example (for future refactoring)
+  // Smart Notifications Example - only message and type for deduplication
   notification: {
-    id: number
     message: string
-    type: 'info' | 'success' | 'warning' | 'error'
-    timestamp: number
+    type: 'info' | 'success' | 'error'
   }
 
   // Scroll Parallax Example (for future refactoring)
@@ -105,6 +103,9 @@ export const exampleEmitter = new Emitter<ExampleEvents>({
 
     // API data: deep comparison (object with multiple fields)
     { event: 'api-data', comparison: 'deep' },
+
+    // Notification: deep comparison (prevents duplicate toast spam)
+    { event: 'notification', comparison: 'deep' },
 
     // Scroll: shallow comparison (flat object)
     { event: 'scroll-position', comparison: 'shallow' },

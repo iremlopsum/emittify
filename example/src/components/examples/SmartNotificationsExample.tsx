@@ -1,9 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { AlertCircle, CheckCircle, Info, Zap } from 'lucide-react'
 
 import { Button } from '../ui/button'
 import { ExampleWrapper } from '../ExampleWrapper'
+
+import { exampleEmitter } from '../../../events'
 
 interface Toast {
   id: number
@@ -16,34 +18,40 @@ export function SmartNotificationsExample() {
   const [toasts, setToasts] = useState<Toast[]>([])
   const [attempted, setAttempted] = useState(0)
   const [emitted, setEmitted] = useState(0)
-  const lastToast = useRef<{ message: string; type: string } | null>(null)
   const toastId = useRef(0)
 
-  const addToast = (message: string, type: 'success' | 'error' | 'info', checkDuplicate = true) => {
+  // Listen for notification events from Emittify
+  useEffect(() => {
+    const listener = exampleEmitter.listen('notification', notification => {
+      // Event was emitted (passed deduplication)
+      setEmitted(prev => prev + 1)
+
+      // Generate id and timestamp when displaying, not when sending
+      const newToast: Toast = {
+        id: toastId.current++,
+        message: notification.message,
+        type: notification.type,
+        timestamp: Date.now(),
+      }
+
+      setToasts(prev => [...prev, newToast])
+
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== newToast.id))
+      }, 3000)
+    })
+
+    return () => listener.clearListener()
+  }, [])
+
+  const addToast = (message: string, type: 'success' | 'error' | 'info') => {
     setAttempted(prev => prev + 1)
 
-    // Deep deduplication check
-    if (checkDuplicate && lastToast.current) {
-      if (lastToast.current.message === message && lastToast.current.type === type) {
-        return // Blocked duplicate
-      }
-    }
-
-    lastToast.current = { message, type }
-    setEmitted(prev => prev + 1)
-
-    const newToast: Toast = {
-      id: toastId.current++,
+    // Send through Emittify - deduplication compares only message and type
+    exampleEmitter.send('notification', {
       message,
       type,
-      timestamp: Date.now(),
-    }
-
-    setToasts(prev => [...prev, newToast])
-
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== newToast.id))
-    }, 3000)
+    })
   }
 
   const spamNotifications = () => {
@@ -85,22 +93,22 @@ export function SmartNotificationsExample() {
         <div className="flex flex-wrap gap-3">
           <Button
             onClick={() => addToast('Operation successful!', 'success')}
-            className="bg-green-500/20 hover:bg-green-500/30 border border-green-500/30">
+            className="bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-white">
             Success Toast
           </Button>
           <Button
             onClick={() => addToast('Something went wrong', 'error')}
-            className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30">
+            className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-white">
             Error Toast
           </Button>
           <Button
             onClick={() => addToast('Here is some info', 'info')}
-            className="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30">
+            className="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 text-white">
             Info Toast
           </Button>
           <Button
             onClick={spamNotifications}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+            className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
             <Zap className="mr-2 h-4 w-4" />
             Spam Test
           </Button>
@@ -146,7 +154,7 @@ export function SmartNotificationsExample() {
             {'\n'}
             {'  '}
             <span className="text-cyan-400">deduplicatedEvents</span>: [{'{'}{' '}
-            <span className="text-cyan-400">event</span>: <span className="text-green-400">'toast'</span>,{' '}
+            <span className="text-cyan-400">event</span>: <span className="text-green-400">'notification'</span>,{' '}
             <span className="text-cyan-400">comparison</span>: <span className="text-green-400">'deep'</span> {'}'}]
             {'\n'}
             {'}'})
