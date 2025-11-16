@@ -2,6 +2,8 @@ import { motion } from 'motion/react'
 
 import { Badge } from './ui/badge'
 
+import { FADE_UP_VIEW_MOTION, SPRING_CONFIG } from '../constants/animations'
+
 interface ExampleWrapperProps {
   title: string
   subtitle: string
@@ -12,10 +14,9 @@ interface ExampleWrapperProps {
 export function ExampleWrapper({ title, subtitle, badge, children }: ExampleWrapperProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      {...FADE_UP_VIEW_MOTION}
       viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.6 }}
+      transition={{ ...SPRING_CONFIG, duration: 0.6 }}
       className="bg-linear-to-br from-gray-900/80 to-gray-800/50 rounded-xl p-8 border border-gray-800">
       <div className="mb-6">
         <div className="flex items-start justify-between mb-2">

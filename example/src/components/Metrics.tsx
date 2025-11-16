@@ -3,15 +3,16 @@ import { Package, Zap, Shield, Star } from 'lucide-react'
 
 import { Badge } from './ui/badge'
 
+import { FADE_UP_VIEW_MOTION, FADE_LEFT_MOTION, HOVER_SCALE_LARGE, SPRING_CONFIG } from '../constants/animations'
+
 export function Metrics() {
   return (
     <section className="py-24 px-6">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          {...FADE_UP_VIEW_MOTION}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}>
+          transition={{ ...SPRING_CONFIG, duration: 0.6 }}>
           <h2 className="text-center mb-4">Performance Metrics</h2>
           <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
             Built for production, optimized for developer experience
@@ -20,11 +21,10 @@ export function Metrics() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            {...FADE_UP_VIEW_MOTION}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0 }}
-            whileHover={{ scale: 1.05 }}
+            transition={{ ...SPRING_CONFIG, duration: 0.6, delay: 0 }}
+            whileHover={HOVER_SCALE_LARGE}
             className="bg-linear-to-br from-purple-900/30 to-purple-800/20 rounded-xl p-6 border border-purple-500/30 text-center">
             <Package className="h-8 w-8 mx-auto mb-3 text-purple-400" />
             <div className="text-3xl mb-2 text-purple-300">~2KB</div>
@@ -32,11 +32,10 @@ export function Metrics() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            {...FADE_UP_VIEW_MOTION}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            whileHover={{ scale: 1.05 }}
+            transition={{ ...SPRING_CONFIG, duration: 0.6, delay: 0.1 }}
+            whileHover={HOVER_SCALE_LARGE}
             className="bg-linear-to-br from-cyan-900/30 to-cyan-800/20 rounded-xl p-6 border border-cyan-500/30 text-center">
             <Zap className="h-8 w-8 mx-auto mb-3 text-cyan-400" />
             <div className="text-3xl mb-2 text-cyan-300">{'<1ms'}</div>
@@ -44,11 +43,10 @@ export function Metrics() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            {...FADE_UP_VIEW_MOTION}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            whileHover={{ scale: 1.05 }}
+            transition={{ ...SPRING_CONFIG, duration: 0.6, delay: 0.2 }}
+            whileHover={HOVER_SCALE_LARGE}
             className="bg-linear-to-br from-pink-900/30 to-pink-800/20 rounded-xl p-6 border border-pink-500/30 text-center">
             <Shield className="h-8 w-8 mx-auto mb-3 text-pink-400" />
             <div className="text-3xl mb-2 text-pink-300">100%</div>
@@ -56,11 +54,10 @@ export function Metrics() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            {...FADE_UP_VIEW_MOTION}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            whileHover={{ scale: 1.05 }}
+            transition={{ ...SPRING_CONFIG, duration: 0.6, delay: 0.3 }}
+            whileHover={HOVER_SCALE_LARGE}
             className="bg-linear-to-br from-green-900/30 to-green-800/20 rounded-xl p-6 border border-green-500/30 text-center">
             <Star className="h-8 w-8 mx-auto mb-3 text-green-400" />
             <div className="text-3xl mb-2 text-green-300">Zero</div>
@@ -70,10 +67,9 @@ export function Metrics() {
 
         {/* Bundle Size Comparison Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          {...FADE_UP_VIEW_MOTION}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ ...SPRING_CONFIG, duration: 0.6, delay: 0.4 }}
           className="bg-linear-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-8 border border-gray-800">
           <h3 className="mb-8 text-center">Bundle Size Comparison</h3>
 
@@ -87,10 +83,9 @@ export function Metrics() {
             ].map((lib, index) => (
               <motion.div
                 key={lib.name}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                {...FADE_LEFT_MOTION}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
+                transition={{ ...SPRING_CONFIG, duration: 0.4, delay: index * 0.1 }}
                 className="flex items-center gap-4">
                 <div className="w-32 text-sm text-gray-400">{lib.name}</div>
                 <div className="flex-1 h-8 bg-gray-800 rounded-full overflow-hidden">
@@ -98,7 +93,7 @@ export function Metrics() {
                     initial={{ width: 0 }}
                     whileInView={{ width: `${(lib.size / 12) * 100}%` }}
                     viewport={{ once: true }}
-                    transition={{ duration: 1, delay: index * 0.1 }}
+                    transition={{ ...SPRING_CONFIG, duration: 1, delay: index * 0.1 }}
                     className={`h-full bg-linear-to-r ${lib.color} flex items-center justify-end pr-3`}>
                     <span className="text-xs">{lib.size}KB</span>
                   </motion.div>
@@ -114,10 +109,9 @@ export function Metrics() {
 
         {/* Badges */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          {...FADE_UP_VIEW_MOTION}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+          transition={{ ...SPRING_CONFIG, duration: 0.6, delay: 0.5 }}
           className="flex flex-wrap justify-center gap-3 mt-12">
           <Badge className="bg-gray-800 border-gray-700">
             <img src="https://img.shields.io/npm/v/@colorfy-software/emittify.svg" alt="npm version" className="h-5" />

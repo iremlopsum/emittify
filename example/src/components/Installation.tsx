@@ -4,6 +4,8 @@ import { Copy, Check } from 'lucide-react'
 
 import { Button } from './ui/button'
 
+import { FADE_UP_VIEW_MOTION, SPRING_CONFIG } from '../constants/animations'
+
 export function Installation() {
   const [copied, setCopied] = useState(false)
   const installCommand = 'yarn add @colorfy-software/emittify'
@@ -18,10 +20,9 @@ export function Installation() {
     <section className="py-16 px-6">
       <div className="max-w-4xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          {...FADE_UP_VIEW_MOTION}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}>
+          transition={{ ...SPRING_CONFIG, duration: 0.6 }}>
           <h2 className="text-center mb-8">Installation</h2>
 
           <div className="relative group">

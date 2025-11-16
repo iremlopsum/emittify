@@ -3,15 +3,16 @@ import { Github, Package, Heart } from 'lucide-react'
 
 import { Button } from './ui/button'
 
+import { FADE_UP_VIEW_MOTION, SPRING_CONFIG } from '../constants/animations'
+
 export function Footer() {
   return (
     <footer className="py-16 px-6 border-t border-gray-800">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          {...FADE_UP_VIEW_MOTION}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}>
+          transition={{ ...SPRING_CONFIG, duration: 0.6 }}>
           {/* Main Content */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
             {/* Brand */}

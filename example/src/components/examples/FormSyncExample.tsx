@@ -6,6 +6,7 @@ import { Label } from '../ui/label'
 import { ExampleWrapper } from '../ExampleWrapper'
 
 import { exampleEmitter } from '../../../events'
+import { HOVER_SCALE_SMALL, SPRING_CONFIG } from '../../constants/animations'
 
 interface FormData {
   name: string
@@ -39,7 +40,8 @@ export function FormSyncExample() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Form 1 */}
           <motion.div
-            whileHover={{ scale: 1.01 }}
+            whileHover={HOVER_SCALE_SMALL}
+            transition={SPRING_CONFIG}
             className="bg-linear-to-br from-purple-900/30 to-purple-800/20 rounded-lg p-6 border border-purple-500/30">
             <h4 className="mb-4 text-purple-300">Form A</h4>
             <div className="space-y-4">
@@ -86,7 +88,8 @@ export function FormSyncExample() {
 
           {/* Form 2 */}
           <motion.div
-            whileHover={{ scale: 1.01 }}
+            whileHover={HOVER_SCALE_SMALL}
+            transition={SPRING_CONFIG}
             className="bg-linear-to-br from-cyan-900/30 to-cyan-800/20 rounded-lg p-6 border border-cyan-500/30">
             <h4 className="mb-4 text-cyan-300">Form B</h4>
             <div className="space-y-4">

@@ -3,6 +3,8 @@ import { Github, Package } from 'lucide-react'
 
 import { Button } from './ui/button'
 
+import { BLOB_BREATHING_MOTION, EASE_INOUT_BREATHING, FADE_UP_MOTION, SPRING_CONFIG } from '../constants/animations'
+
 export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
@@ -10,46 +12,23 @@ export function Hero() {
       <div className="absolute inset-0 opacity-30">
         <motion.div
           className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full blur-[128px]"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+          {...BLOB_BREATHING_MOTION}
+          transition={EASE_INOUT_BREATHING}
         />
         <motion.div
           className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan-500 rounded-full blur-[128px]"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-            delay: 1,
-          }}
+          {...BLOB_BREATHING_MOTION}
+          transition={{ ...EASE_INOUT_BREATHING, delay: 1 }}
         />
         <motion.div
           className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-pink-500 rounded-full blur-[128px]"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-            delay: 2,
-          }}
+          {...BLOB_BREATHING_MOTION}
+          transition={{ ...EASE_INOUT_BREATHING, delay: 2 }}
         />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto text-center">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+        <motion.div {...FADE_UP_MOTION} transition={{ ...SPRING_CONFIG, duration: 0.8 }}>
           <div className="mb-6">
             <span className="text-6xl inline-block">🛩</span>
           </div>
@@ -76,11 +55,7 @@ export function Hero() {
           </div>
 
           {/* Animated code snippet */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="max-w-2xl mx-auto">
+          <motion.div {...FADE_UP_MOTION} transition={{ ...SPRING_CONFIG, duration: 0.8, delay: 0.3 }} className="max-w-2xl mx-auto">
             <div className="bg-[#1e1e2e] rounded-lg p-6 border border-gray-800 shadow-2xl">
               <pre className="text-left text-sm overflow-x-auto">
                 <code className="text-gray-300">

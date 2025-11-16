@@ -1,6 +1,8 @@
 import { motion } from 'motion/react'
 import { Code2, Database, GitCompare, Zap, Webhook, TestTube } from 'lucide-react'
 
+import { FADE_UP_VIEW_MOTION, HOVER_LIFT, SPRING_CONFIG } from '../constants/animations'
+
 const features = [
   {
     icon: Code2,
@@ -45,10 +47,9 @@ export function FeaturesGrid() {
     <section className="py-24 px-6">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          {...FADE_UP_VIEW_MOTION}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}>
+          transition={{ ...SPRING_CONFIG, duration: 0.6 }}>
           <h2 className="text-center mb-4">Powerful Features</h2>
           <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
             Everything you need for event-driven architecture
@@ -59,11 +60,10 @@ export function FeaturesGrid() {
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              {...FADE_UP_VIEW_MOTION}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              whileHover={{ y: -4 }}
+              transition={{ ...SPRING_CONFIG, duration: 0.6, delay: index * 0.1 }}
+              whileHover={HOVER_LIFT}
               className="group">
               <div className="h-full bg-linear-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-8 border border-gray-800 hover:border-purple-500/50 transition-all duration-300">
                 <div className="mb-4 text-4xl">{feature.emoji}</div>

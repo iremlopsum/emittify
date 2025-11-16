@@ -2,7 +2,9 @@ import { motion } from 'motion/react'
 import { useState, useRef, useEffect } from 'react'
 
 import { ExampleWrapper } from '../ExampleWrapper'
+
 import { exampleEmitter, type Particle } from '../../../events'
+import { PARTICLE_MOTION, EASE_OUT_TRANSITION } from '../../constants/animations'
 
 export function MouseTrailExample() {
   // Using Emittify hooks to manage particles and position
@@ -80,9 +82,8 @@ export function MouseTrailExample() {
             return (
               <motion.div
                 key={particle.id}
-                initial={{ opacity: 1, scale: 1 }}
-                animate={{ opacity: 0, scale: 0 }}
-                transition={{ duration: 2, ease: 'easeOut' }}
+                {...PARTICLE_MOTION}
+                transition={EASE_OUT_TRANSITION}
                 className="absolute w-6 h-6 rounded-full pointer-events-none"
                 style={{
                   left: particle.x - 12,

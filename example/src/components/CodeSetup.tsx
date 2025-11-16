@@ -1,14 +1,12 @@
 import { motion } from 'motion/react'
 
+import { FADE_UP_VIEW_MOTION, SPRING_CONFIG } from '../constants/animations'
+
 export function CodeSetup() {
   return (
     <section className="py-24 px-6">
       <div className="max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}>
+        <motion.div {...FADE_UP_VIEW_MOTION} viewport={{ once: true }} transition={{ ...SPRING_CONFIG, duration: 0.6 }}>
           <h2 className="text-center mb-4">Quick Setup</h2>
           <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
             TypeScript-first configuration with full type safety

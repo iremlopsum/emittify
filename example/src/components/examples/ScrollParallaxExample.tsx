@@ -6,6 +6,7 @@ import { Switch } from '../ui/switch'
 import { ExampleWrapper } from '../ExampleWrapper'
 
 import { exampleEmitter } from '../../../events'
+import { SPRING_CONFIG } from '../../constants/animations'
 
 export function ScrollParallaxExample() {
   const scrollData = exampleEmitter.useEventListener('scroll-position', { y: 0, progress: 0 })
@@ -70,7 +71,7 @@ export function ScrollParallaxExample() {
           <motion.div
             className="h-full bg-linear-to-r from-purple-500 via-cyan-500 to-pink-500"
             style={{ width: `${scrollData.progress}%` }}
-            transition={{ duration: 0.1 }}
+            transition={{ ...SPRING_CONFIG, duration: 0.1 }}
           />
         </div>
 

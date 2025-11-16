@@ -6,6 +6,7 @@ import { Button } from '../ui/button'
 import { ExampleWrapper } from '../ExampleWrapper'
 
 import { exampleEmitter } from '../../../events'
+import { SUBSCRIBER_CARD_MOTION, HOVER_SCALE_MEDIUM, SPRING_CONFIG } from '../../constants/animations'
 
 interface Subscriber {
   id: number
@@ -20,9 +21,8 @@ function SubscriberCard({ id, onRemove }: { id: number; onRemove: (id: number) =
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
+      {...SUBSCRIBER_CARD_MOTION}
+      transition={SPRING_CONFIG}
       className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 relative group">
       <button
         onClick={() => onRemove(id)}
@@ -78,7 +78,8 @@ export function LiveStatsExample() {
         {/* Main Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            whileHover={HOVER_SCALE_MEDIUM}
+            transition={SPRING_CONFIG}
             className="bg-linear-to-br from-purple-500/20 to-purple-600/10 rounded-lg p-6 border border-purple-500/30">
             <div className="flex items-center gap-3 mb-2">
               <MessageSquare className="h-5 w-5 text-purple-400" />
@@ -94,7 +95,8 @@ export function LiveStatsExample() {
           </motion.div>
 
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            whileHover={HOVER_SCALE_MEDIUM}
+            transition={SPRING_CONFIG}
             className="bg-linear-to-br from-cyan-500/20 to-cyan-600/10 rounded-lg p-6 border border-cyan-500/30">
             <div className="flex items-center gap-3 mb-2">
               <User className="h-5 w-5 text-cyan-400" />
@@ -110,7 +112,8 @@ export function LiveStatsExample() {
           </motion.div>
 
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            whileHover={HOVER_SCALE_MEDIUM}
+            transition={SPRING_CONFIG}
             className="bg-linear-to-br from-pink-500/20 to-pink-600/10 rounded-lg p-6 border border-pink-500/30">
             <div className="flex items-center gap-3 mb-2">
               <Bell className="h-5 w-5 text-pink-400" />

@@ -8,6 +8,7 @@ import { Switch } from '../ui/switch'
 import { ExampleWrapper } from '../ExampleWrapper'
 
 import { exampleEmitter } from '../../../events'
+import { PULSE_SCALE_MOTION, SPIN_INFINITE, SPRING_CONFIG } from '../../constants/animations'
 
 export function ApiPollingExample() {
   // Subscribe to both deduplicated and non-deduplicated events
@@ -154,17 +155,19 @@ export function ApiPollingExample() {
         <div className="grid grid-cols-2 gap-4">
           <motion.div
             animate={{
-              scale: flashBlocked ? [1, 1.05, 1] : 1,
+              scale: flashBlocked ? PULSE_SCALE_MOTION.scale : 1,
             }}
+            transition={SPRING_CONFIG}
             className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
             <div className="text-sm text-gray-400 mb-2">Total Polls</div>
             <div className="text-4xl text-gray-300">{pollCount}</div>
           </motion.div>
           <motion.div
             animate={{
-              scale: flashUpdate ? [1, 1.05, 1] : 1,
+              scale: flashUpdate ? PULSE_SCALE_MOTION.scale : 1,
               borderColor: flashUpdate ? '#10b981' : 'rgb(55, 65, 81)',
             }}
+            transition={SPRING_CONFIG}
             className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
             <div className="text-sm text-gray-400 mb-2">Updates Emitted</div>
             <div className="text-4xl text-green-300">{updateCount}</div>
@@ -186,7 +189,7 @@ export function ApiPollingExample() {
             {isPolling && (
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                transition={SPIN_INFINITE}
                 className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full"
               />
             )}
