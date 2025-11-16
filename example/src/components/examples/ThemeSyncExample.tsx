@@ -5,10 +5,11 @@ import { Sun, Moon, Monitor } from 'lucide-react'
 import { Button } from '../ui/button'
 import { ExampleWrapper } from '../ExampleWrapper'
 
-type Theme = 'light' | 'dark' | 'auto'
+import { exampleEmitter } from '../../../events'
 
 export function ThemeSyncExample() {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const theme = exampleEmitter.useEventListener('theme', 'dark')
+  const [themeChanges, setThemeChanges] = useState(0)
 
   const themeColors = {
     light: {
@@ -39,21 +40,30 @@ export function ThemeSyncExample() {
         {/* Theme Toggle */}
         <div className="flex justify-center gap-3">
           <Button
-            onClick={() => setTheme('light')}
+            onClick={() => {
+              exampleEmitter.send('theme', 'light')
+              setThemeChanges(prev => prev + 1)
+            }}
             variant={theme === 'light' ? 'default' : 'outline'}
             className={theme === 'light' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}>
             <Sun className="mr-2 h-4 w-4" />
             Light
           </Button>
           <Button
-            onClick={() => setTheme('dark')}
+            onClick={() => {
+              exampleEmitter.send('theme', 'dark')
+              setThemeChanges(prev => prev + 1)
+            }}
             variant={theme === 'dark' ? 'default' : 'outline'}
-            className={theme === 'dark' ? 'bg-purple-500 hover:bg-purple-600' : ''}>
+            className={theme === 'dark' ? 'bg-purple-500 hover:bg-purple-600 text-white' : 'text-white'}>
             <Moon className="mr-2 h-4 w-4" />
             Dark
           </Button>
           <Button
-            onClick={() => setTheme('auto')}
+            onClick={() => {
+              exampleEmitter.send('theme', 'auto')
+              setThemeChanges(prev => prev + 1)
+            }}
             variant={theme === 'auto' ? 'default' : 'outline'}
             className={theme === 'auto' ? 'bg-cyan-500 hover:bg-cyan-600' : ''}>
             <Monitor className="mr-2 h-4 w-4" />
@@ -90,21 +100,31 @@ export function ThemeSyncExample() {
               </motion.div>
             </div>
 
-            <div className={`${current.card} rounded-lg p-4 border`}>
+            <div className={`${current.card} rounded-lg p-4 border space-y-2`}>
               <p className="text-sm">
                 All components receive the theme instantly through cached events. New components mounted after theme
                 change get the current value immediately.
               </p>
+              <div className="text-xs opacity-70">
+                Theme changes:{' '}
+                <span className={`font-mono bg-gradient-to-r ${current.accent} bg-clip-text text-transparent`}>
+                  {themeChanges}
+                </span>
+              </div>
             </div>
           </div>
         </motion.div>
 
         <div className="bg-[#1e1e2e] rounded-lg p-4 border border-gray-700">
-          <code className="text-sm text-gray-300">
-            <span className="text-cyan-400">const</span> theme = emitter.
+          <code className="text-sm text-gray-300 whitespace-pre">
+            <span className="text-purple-400">// Subscribe to cached theme events</span>
+            {'\n'}
+            <span className="text-cyan-400">const</span> theme = exampleEmitter.
             <span className="text-cyan-400">useEventListener</span>(<span className="text-green-400">'theme'</span>,{' '}
-            <span className="text-green-400">'dark'</span>){'\n'}
-            emitter.<span className="text-cyan-400">send</span>(<span className="text-green-400">'theme'</span>,{' '}
+            <span className="text-green-400">'dark'</span>){'\n\n'}
+            <span className="text-purple-400">// Emit theme changes</span>
+            {'\n'}
+            exampleEmitter.<span className="text-cyan-400">send</span>(<span className="text-green-400">'theme'</span>,{' '}
             <span className="text-green-400">'{theme}'</span>)
           </code>
         </div>
