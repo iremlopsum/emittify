@@ -35,12 +35,11 @@ export interface ExampleEvents {
   // Theme Sync Example (for future refactoring)
   theme: 'light' | 'dark' | 'auto'
 
-  // Form Sync Example (for future refactoring)
-  'form-state': {
+  // Form Sync Example
+  'form-data': {
     name: string
     email: string
     message: string
-    isValid: boolean
   }
 
   // API Polling Example - two events to demonstrate deduplication
@@ -74,7 +73,7 @@ export const exampleEmitter = new Emitter<ExampleEvents>({
     'stats-messages', // Dashboard stats should show current values
     'stats-users',
     'stats-alerts',
-    'form-state', // Form state should persist
+    'form-data', // Form state should persist
     'api-data-deduped', // API data should show last fetched values
     'api-data-no-dedup', // Non-deduplicated API data
   ],
@@ -95,8 +94,8 @@ export const exampleEmitter = new Emitter<ExampleEvents>({
     { event: 'stats-users', comparison: 'shallow' },
     { event: 'stats-alerts', comparison: 'shallow' },
 
-    // Form state: deep comparison (nested validation state)
-    { event: 'form-state', comparison: 'deep' },
+    // Form data: shallow comparison (flat object with primitives)
+    { event: 'form-data', comparison: 'shallow' },
 
     // API data: deep comparison - only the deduplicated version
     { event: 'api-data-deduped', comparison: 'deep' },

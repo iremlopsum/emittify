@@ -5,6 +5,8 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { ExampleWrapper } from '../ExampleWrapper'
 
+import { exampleEmitter } from '../../../events'
+
 interface FormData {
   name: string
   email: string
@@ -12,14 +14,20 @@ interface FormData {
 }
 
 export function FormSyncExample() {
-  const [formData, setFormData] = useState<FormData>({
+  // Use Emittify to manage form state across both forms
+  const formData = exampleEmitter.useEventListener('form-data', {
     name: '',
     email: '',
     message: '',
   })
 
+  // Track event emissions to demonstrate deduplication
+  const [eventCount, setEventCount] = useState(0)
+
   const updateField = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    const updatedData = { ...formData, [field]: value }
+    exampleEmitter.send('form-data', updatedData)
+    setEventCount(prev => prev + 1)
   }
 
   return (
@@ -124,21 +132,40 @@ export function FormSyncExample() {
           </motion.div>
         </div>
 
-        {/* JSON Preview */}
-        <motion.div layout className="bg-[#1e1e2e] rounded-lg p-6 border border-gray-700">
-          <h4 className="mb-3 text-gray-300">Current State (JSON)</h4>
-          <pre className="text-sm overflow-x-auto">
-            <code className="text-gray-400">{JSON.stringify(formData, null, 2)}</code>
-          </pre>
-        </motion.div>
+        {/* Stats & Preview */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Event Stats */}
+          <motion.div layout className="bg-[#1e1e2e] rounded-lg p-6 border border-gray-700">
+            <h4 className="mb-3 text-gray-300">Event Statistics</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Total Updates:</span>
+                <span className="text-2xl font-bold text-purple-400">{eventCount}</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">With shallow comparison, only actual changes emit events</p>
+            </div>
+          </motion.div>
+
+          {/* JSON Preview */}
+          <motion.div layout className="bg-[#1e1e2e] rounded-lg p-6 border border-gray-700">
+            <h4 className="mb-3 text-gray-300">Current State (JSON)</h4>
+            <pre className="text-sm overflow-x-auto">
+              <code className="text-gray-400">{JSON.stringify(formData, null, 2)}</code>
+            </pre>
+          </motion.div>
+        </div>
 
         <div className="bg-[#1e1e2e] rounded-lg p-4 border border-gray-700">
-          <code className="text-sm text-gray-300">
-            <span className="text-gray-500">// Shallow comparison prevents duplicate emissions</span>
+          <code className="text-sm text-gray-300 whitespace-pre">
+            <span className="text-gray-500">// Component usage with deduplication</span>
             {'\n'}
-            <span className="text-purple-400">new</span> <span className="text-yellow-400">Emittify</span>({'{'}{' '}
-            <span className="text-cyan-400">deduplicatedEvents</span>: [
-            <span className="text-green-400">'form-data'</span>] {'}'})
+            <span className="text-purple-400">const</span> formData ={' '}
+            <span className="text-cyan-400">exampleEmitter</span>.
+            <span className="text-yellow-400">useEventListener</span>(
+            <span className="text-green-400">'form-data'</span>, initialValue)
+            {'\n'}
+            <span className="text-cyan-400">exampleEmitter</span>.<span className="text-yellow-400">send</span>(
+            <span className="text-green-400">'form-data'</span>, updatedData)
           </code>
         </div>
       </div>
