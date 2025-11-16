@@ -1,4 +1,12 @@
-/dist
-/node_modules
-/yarn-error.log
-/yarn.lock
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+.env
+.env.local
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

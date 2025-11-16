@@ -86,10 +86,8 @@ class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof Event
     key: K,
     fallbackValue?: V,
   ): V extends undefined ? EventsType[K] : V => {
-    const value = this.cachedMessages.get(key)
-
-    if (value) {
-      return value
+    if (this.cachedMessages.has(key)) {
+      return this.cachedMessages.get(key) as EventsType[K]
     }
 
     return fallbackValue as EventsType[K]
@@ -107,7 +105,7 @@ class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof Event
       }
     }
 
-    return listener as undefined
+    return undefined
   }
 
   clearAll = () => {
