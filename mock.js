@@ -6,6 +6,8 @@ class EmittifyMock {
   clearAll = jest.fn()
   clearCache = jest.fn()
   clearAllCache = jest.fn()
+  clearDeduplicationCache = jest.fn()
+  clearAllDeduplicationCache = jest.fn()
 }
 
 Object.defineProperty(exports, '__esModule', { value: true })

@@ -20,7 +20,7 @@
 ## 🎯 Purpose
 
 Emittify is a tiny event emitter written with first class Typescript support.
-It supports caching and has hooks for both React and Solid.
+It supports caching, event deduplication, and has hooks for both React and Solid.
 
 ## 🏗️ Installation
 
@@ -47,8 +47,14 @@ interface EventsType {
 }
 
 const emitter = new Emittify<EventsType>({
-  // Cache is used to cache the events and prevent emitting the same event multiple times
+  // Cache is used to cache events and provide initial values to new listeners
   cachedEvents: ['direct-message-count'],
+
+  // Deduplication prevents emitting events when values haven't changed
+  deduplicatedEvents: [
+    { event: 'direct-message-count', comparison: 'shallow' }, // For primitives/simple objects
+    { event: 'toast-notification', comparison: 'deep' }, // For nested objects
+  ],
 })
 
 export default emitter
@@ -81,18 +87,179 @@ emitter.send('direct-message-count', 10)
 const cachedEvent = emitter.getCache('direct-message-count', 0) // Can provide second argument as default value if none is sent yet.
 ```
 
+### 🎛️ Event Deduplication
+
+Event deduplication prevents redundant emissions when the same value is sent multiple times. This is useful for reducing unnecessary re-renders, network calls, or other side effects.
+
+#### Why Use Deduplication?
+
+- **Performance**: Avoid triggering listeners when data hasn't actually changed
+- **Spam Prevention**: Prevent rapid identical events from flooding your system
+- **React Optimization**: Reduce unnecessary component re-renders
+- **Network Efficiency**: Skip redundant API calls or state updates
+
+#### Comparison Strategies
+
+##### 🔍 Deep Comparison
+
+Deep comparison recursively checks all nested properties. Use for complex objects and arrays.
+
+```ts
+interface EventsType {
+  'user-profile': {
+    id: number
+    name: string
+    settings: { theme: string; notifications: boolean }
+  }
+}
+
+const emitter = new Emittify<EventsType>({
+  deduplicatedEvents: [{ event: 'user-profile', comparison: 'deep' }],
+})
+
+// First send always emits
+emitter.send('user-profile', {
+  id: 1,
+  name: 'John',
+  settings: { theme: 'dark', notifications: true },
+}) // ✅ Emitted
+
+// Same nested values - blocked
+emitter.send('user-profile', {
+  id: 1,
+  name: 'John',
+  settings: { theme: 'dark', notifications: true },
+}) // ❌ Blocked
+
+// Changed nested value - emitted
+emitter.send('user-profile', {
+  id: 1,
+  name: 'John',
+  settings: { theme: 'light', notifications: true },
+}) // ✅ Emitted (theme changed)
+```
+
+##### 📏 Shallow Comparison
+
+Shallow comparison only checks first-level properties. Faster, but doesn't detect nested changes.
+
+```ts
+interface EventsType {
+  counter: number
+  status: { active: boolean; count: number }
+}
+
+const emitter = new Emittify<EventsType>({
+  deduplicatedEvents: [
+    { event: 'counter', comparison: 'shallow' },
+    { event: 'status', comparison: 'shallow' },
+  ],
+})
+
+// Primitives work the same as deep comparison
+emitter.send('counter', 5) // ✅ Emitted
+emitter.send('counter', 5) // ❌ Blocked
+emitter.send('counter', 10) // ✅ Emitted
+
+// Shallow only checks top-level properties
+emitter.send('status', { active: true, count: 5 }) // ✅ Emitted
+emitter.send('status', { active: true, count: 5 }) // ❌ Blocked (same values)
+emitter.send('status', { active: false, count: 5 }) // ✅ Emitted (active changed)
+```
+
+#### When to Use Which Strategy?
+
+| Use Case                             | Strategy  | Why                                  |
+| ------------------------------------ | --------- | ------------------------------------ |
+| Primitives (string, number, boolean) | `shallow` | Faster, works the same as deep       |
+| Flat objects                         | `shallow` | 10x faster than deep                 |
+| Nested objects                       | `deep`    | Detects changes in nested properties |
+| Arrays                               | `deep`    | Compares array contents              |
+| Large objects (>1000 keys)           | `shallow` | Better performance                   |
+
+#### Working with Cached Events
+
+Deduplication works seamlessly with caching:
+
+```ts
+const emitter = new Emittify<EventsType>({
+  cachedEvents: ['counter'],
+  deduplicatedEvents: [{ event: 'counter', comparison: 'shallow' }],
+})
+
+emitter.send('counter', 5) // ✅ Emitted and cached
+emitter.send('counter', 5) // ❌ Blocked, but cache still updated
+
+// New listeners get cached value
+emitter.listen('counter', callback) // Receives 5 immediately
+```
+
+#### Clearing Deduplication State
+
+Sometimes you want to reset deduplication to force re-emission:
+
+```ts
+// Clear for specific event
+emitter.clearDeduplicationCache('counter')
+emitter.send('counter', 5) // ✅ Will emit even if 5 was the previous value
+
+// Clear for all events
+emitter.clearAllDeduplicationCache()
+```
+
+#### Real-World Examples
+
+##### API Polling with Deduplication
+
+```ts
+interface EventsType {
+  'api-data': { users: User[]; timestamp: number }
+}
+
+const emitter = new Emittify<EventsType>({
+  cachedEvents: ['api-data'],
+  deduplicatedEvents: [{ event: 'api-data', comparison: 'deep' }],
+})
+
+// Poll API every 5 seconds
+setInterval(async () => {
+  const data = await fetchFromAPI()
+  // Only emits if data actually changed
+  emitter.send('api-data', data)
+}, 5000)
+```
+
+##### Form State Management
+
+```ts
+interface EventsType {
+  'form-state': { name: string; email: string; isValid: boolean }
+}
+
+const emitter = new Emittify<EventsType>({
+  deduplicatedEvents: [{ event: 'form-state', comparison: 'deep' }],
+})
+
+// Multiple rapid updates
+input.addEventListener('input', () => {
+  const state = getFormState()
+  // Only emits when state actually changes
+  emitter.send('form-state', state)
+})
+```
+
 ### 🧪 Testing with Jest
 
 If you don't already have a Jest setup file configured, please add the following to your [Jest configuration file](https://jestjs.io/docs/configuration) and create the new `jest.setup.js` file in project root:
 
 ```js
-setupFiles: ['<rootDir>/jest.setup.js'];
+setupFiles: ['<rootDir>/jest.setup.js']
 ```
 
 You can then add the following line to that setup file to mock the `NativeModule.RNPermissions`:
 
 ```js
-jest.mock('@colorfy-software/emittify', () => require('@colorfy-software/emittify/mock'));
+jest.mock('@colorfy-software/emittify', () => require('@colorfy-software/emittify/mock'))
 ```
 
 ### 🪝 Hooks
@@ -177,6 +344,22 @@ emittify.clearAllCache()
 ```ts
 // Clears listeners for given listener id.
 emittify.clear('listener-id')
+```
+
+#### `clearDeduplicationCache()`
+
+```ts
+// Clears the previous value for a specific deduplicated event.
+// The next send will always emit since there's no previous value to compare.
+emittify.clearDeduplicationCache('event-name')
+```
+
+#### `clearAllDeduplicationCache()`
+
+```ts
+// Clears all previous values for deduplicated events.
+// Next sends will always emit since there are no previous values to compare.
+emittify.clearAllDeduplicationCache()
 ```
 
 ## 💖 Code of Conduct

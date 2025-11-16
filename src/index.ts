@@ -1,5 +1,13 @@
+import fastDeepEqual from 'fast-deep-equal'
+
+export interface DeduplicationConfig<K> {
+  event: K
+  comparison: 'deep' | 'shallow'
+}
+
 export interface OptionsType<EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>> {
   cachedEvents?: (keyof EventsType)[]
+  deduplicatedEvents?: DeduplicationConfig<keyof EventsType>[]
 }
 
 class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>> {
@@ -22,11 +30,77 @@ class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof Event
 
   private cachedMessages = new Map<keyof EventsType, EventsType[keyof EventsType]>()
 
+  /**
+   * Map that stores previous values for deduplicated events
+   * Used to compare current value against previous to prevent redundant emissions
+   */
+  private previousValues = new Map<keyof EventsType, EventsType[keyof EventsType]>()
+
+  /**
+   * Map that stores deduplication config per event (deep or shallow comparison)
+   */
+  private deduplicationConfig = new Map<keyof EventsType, 'deep' | 'shallow'>()
+
   constructor(private options?: OptionsType<EventsType>) {
     this.options = options || {}
+
+    // Initialize deduplication config map
+    if (this.options.deduplicatedEvents) {
+      this.options.deduplicatedEvents.forEach(config => {
+        this.deduplicationConfig.set(config.event, config.comparison)
+      })
+    }
+  }
+
+  /**
+   * Performs shallow equality comparison between two values
+   * Only checks first level properties, not nested objects
+   */
+  private shallowEqual = (a: any, b: any): boolean => {
+    if (a === b) return true
+
+    if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
+      return false
+    }
+
+    const keysA = Object.keys(a)
+    const keysB = Object.keys(b)
+
+    if (keysA.length !== keysB.length) return false
+
+    return keysA.every(key => a[key] === b[key])
+  }
+
+  /**
+   * Checks if two values are equal based on comparison strategy
+   */
+  private areValuesEqual = (a: any, b: any, comparison: 'deep' | 'shallow'): boolean => {
+    return comparison === 'deep' ? fastDeepEqual(a, b) : this.shallowEqual(a, b)
   }
 
   send = <K extends keyof EventsType>(key: K, params: EventsType[K]) => {
+    // Check if this event should be deduplicated
+    const comparisonType = this.deduplicationConfig.get(key)
+
+    if (comparisonType) {
+      // If we have a previous value, compare it with the current one
+      if (this.previousValues.has(key)) {
+        const previousValue = this.previousValues.get(key)
+
+        // If values are equal, skip emission
+        if (this.areValuesEqual(previousValue, params, comparisonType)) {
+          // Still update cache if needed (cache should reflect latest attempt)
+          if (this.options?.cachedEvents?.includes(key)) {
+            this.cachedMessages.set(key, params)
+          }
+          return
+        }
+      }
+
+      // Store current value as previous for next comparison
+      this.previousValues.set(key, params)
+    }
+
     const receivers = this.receivers.get(key)
 
     if (receivers) {
@@ -121,6 +195,22 @@ class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof Event
 
   clearAllCache = () => {
     this.cachedMessages = new Map()
+  }
+
+  /**
+   * Clears the previous value for a specific deduplicated event
+   * Next send will always emit since there's no previous value to compare
+   */
+  clearDeduplicationCache = <K extends keyof EventsType>(key: K) => {
+    this.previousValues.delete(key)
+  }
+
+  /**
+   * Clears all previous values for deduplicated events
+   * Next sends will always emit since there are no previous values to compare
+   */
+  clearAllDeduplicationCache = () => {
+    this.previousValues = new Map()
   }
 }
 
