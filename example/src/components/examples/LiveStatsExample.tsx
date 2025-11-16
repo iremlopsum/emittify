@@ -4,6 +4,7 @@ import { Plus, MessageSquare, User, Bell } from 'lucide-react'
 
 import { Button } from '../ui/button'
 import { ExampleWrapper } from '../ExampleWrapper'
+
 import { exampleEmitter } from '../../../events'
 
 interface Subscriber {
@@ -87,7 +88,7 @@ export function LiveStatsExample() {
             <Button
               size="sm"
               onClick={() => exampleEmitter.send('stats-messages', messages + 1)}
-              className="w-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30">
+              className="w-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-white">
               Increment
             </Button>
           </motion.div>
@@ -103,7 +104,7 @@ export function LiveStatsExample() {
             <Button
               size="sm"
               onClick={() => exampleEmitter.send('stats-users', users + 1)}
-              className="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30">
+              className="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 text-white">
               Increment
             </Button>
           </motion.div>
@@ -119,7 +120,7 @@ export function LiveStatsExample() {
             <Button
               size="sm"
               onClick={() => exampleEmitter.send('stats-alerts', alerts + 1)}
-              className="w-full bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30">
+              className="w-full bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 text-white">
               Increment
             </Button>
           </motion.div>
@@ -129,7 +130,7 @@ export function LiveStatsExample() {
         <div className="flex justify-center">
           <Button
             onClick={addSubscriber}
-            className="bg-linear-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600">
+            className="bg-linear-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white">
             <Plus className="mr-2 h-4 w-4" />
             Add Subscriber
           </Button>
