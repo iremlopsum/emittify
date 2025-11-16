@@ -1,31 +1,30 @@
 import { motion } from 'motion/react'
 import { useState, useRef, useEffect } from 'react'
 
-import { Label } from '../ui/label'
-import { Switch } from '../ui/switch'
 import { ExampleWrapper } from '../ExampleWrapper'
-
-interface Particle {
-  id: number
-  x: number
-  y: number
-  timestamp: number
-}
+import { exampleEmitter, type Particle } from '../../../events'
 
 export function MouseTrailExample() {
-  const [particles, setParticles] = useState<Particle[]>([])
+  // Using Emittify hooks to manage particles and position
+  const particles = exampleEmitter.useEventListener('mouse-particles', [])
+  const position = exampleEmitter.useEventListener('mouse-position', { x: 0, y: 0, timestamp: 0 })
+
+  // Keep UI state and counters as React state
   const [eventCount, setEventCount] = useState(0)
-  const [deduplication, setDeduplication] = useState(true)
+
   const canvasRef = useRef<HTMLDivElement>(null)
-  const lastPosition = useRef({ x: 0, y: 0 })
   const particleId = useRef(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setParticles(prev => prev.filter(p => Date.now() - p.timestamp < 2000))
+      // Clean up old particles by emitting filtered array
+      const activeParticles = particles.filter((p: Particle) => Date.now() - p.timestamp < 2000)
+      if (activeParticles.length !== particles.length) {
+        exampleEmitter.send('mouse-particles', activeParticles)
+      }
     }, 50)
     return () => clearInterval(interval)
-  }, [])
+  }, [particles])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return
@@ -33,26 +32,20 @@ export function MouseTrailExample() {
     const rect = canvasRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    const timestamp = Date.now()
 
-    // Deduplication logic (only if positions change significantly)
-    if (deduplication) {
-      const dx = Math.abs(x - lastPosition.current.x)
-      const dy = Math.abs(y - lastPosition.current.y)
-      if (dx < 5 && dy < 5) return
-    }
-
-    lastPosition.current = { x, y }
+    // Emit position through Emittify (deduplication handled by library)
+    exampleEmitter.send('mouse-position', { x, y, timestamp })
     setEventCount(prev => prev + 1)
 
-    setParticles(prev => [
-      ...prev,
-      {
-        id: particleId.current++,
-        x,
-        y,
-        timestamp: Date.now(),
-      },
-    ])
+    // Emit updated particles array through Emittify
+    const newParticle: Particle = {
+      id: particleId.current++,
+      x,
+      y,
+      timestamp,
+    }
+    exampleEmitter.send('mouse-particles', [...particles, newParticle])
   }
 
   return (
@@ -61,33 +54,25 @@ export function MouseTrailExample() {
       subtitle="Real-time event emission with particle effects"
       badge="INTERACTIVE">
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-sm">
-              <span className="text-gray-400">Events sent:</span> <span className="text-cyan-400">{eventCount}</span>
-            </div>
-            <div className="text-sm">
-              <span className="text-gray-400">Active particles:</span>{' '}
-              <span className="text-purple-400">{particles.length}</span>
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="text-sm">
+            <span className="text-gray-400">Events sent:</span> <span className="text-cyan-400">{eventCount}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Switch id="dedup-trail" checked={deduplication} onCheckedChange={setDeduplication} />
-            <Label htmlFor="dedup-trail" className="text-sm text-gray-400">
-              Deduplication
-            </Label>
+          <div className="text-sm">
+            <span className="text-gray-400">Active particles:</span>{' '}
+            <span className="text-purple-400">{particles.length}</span>
           </div>
         </div>
 
         <div
           ref={canvasRef}
           onMouseMove={handleMouseMove}
-          className="relative bg-gradient-to-br from-gray-900/80 to-gray-800/50 rounded-lg border border-gray-700 overflow-hidden cursor-crosshair"
+          className="relative bg-linear-to-br from-gray-900/80 to-gray-800/50 rounded-lg border border-gray-700 overflow-hidden cursor-crosshair"
           style={{ height: '500px' }}>
           <div className="absolute inset-0 flex items-center justify-center text-gray-600 pointer-events-none">
             Move your mouse to create particles
           </div>
-          {particles.map(particle => {
+          {particles.map((particle: Particle) => {
             const age = Date.now() - particle.timestamp
             const opacity = 1 - age / 2000
             const scale = 1 - age / 4000
@@ -115,9 +100,15 @@ export function MouseTrailExample() {
 
         <div className="bg-[#1e1e2e] rounded-lg p-4 border border-gray-700">
           <code className="text-sm text-gray-300">
-            <span className="text-cyan-400">emitter.send</span>(<span className="text-green-400">'mouse-position'</span>
-            , {'{'} x: <span className="text-orange-400">{lastPosition.current.x.toFixed(0)}</span>, y:{' '}
-            <span className="text-orange-400">{lastPosition.current.y.toFixed(0)}</span> {'}'})
+            <span className="text-purple-400">const</span> particles = emitter.
+            <span className="text-cyan-400">useEventListener</span>(
+            <span className="text-green-400">'mouse-particles'</span>, []){'\n'}
+            <span className="text-purple-400">const</span> position = emitter.
+            <span className="text-cyan-400">useEventListener</span>(
+            <span className="text-green-400">'mouse-position'</span>){'\n'}
+            emitter.<span className="text-cyan-400">send</span>(<span className="text-green-400">'mouse-position'</span>
+            , {'{'} x: <span className="text-orange-400">{position.x.toFixed(0)}</span>, y:{' '}
+            <span className="text-orange-400">{position.y.toFixed(0)}</span> {'}'})
           </code>
         </div>
       </div>

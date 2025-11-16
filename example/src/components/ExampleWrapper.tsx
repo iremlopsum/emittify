@@ -16,11 +16,11 @@ export function ExampleWrapper({ title, subtitle, badge, children }: ExampleWrap
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
       transition={{ duration: 0.6 }}
-      className="bg-gradient-to-br from-gray-900/80 to-gray-800/50 rounded-xl p-8 border border-gray-800">
+      className="bg-linear-to-br from-gray-900/80 to-gray-800/50 rounded-xl p-8 border border-gray-800">
       <div className="mb-6">
         <div className="flex items-start justify-between mb-2">
           <h3>{title}</h3>
-          <Badge className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border-purple-500/30 text-purple-300">
+          <Badge className="bg-linear-to-r from-purple-500/20 to-cyan-500/20 border-purple-500/30 text-purple-300">
             {badge}
           </Badge>
         </div>
