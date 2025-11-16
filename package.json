@@ -17,6 +17,7 @@
     }
   },
   "scripts": {
+    "setup": "bash scripts/setup.sh",
     "build": "npx tsc",
     "clean:build": "rm -rf dist",
     "test": "jest",

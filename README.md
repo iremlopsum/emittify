@@ -362,6 +362,65 @@ emittify.clearDeduplicationCache('event-name')
 emittify.clearAllDeduplicationCache()
 ```
 
+## 🛠️ Development
+
+### Setup
+
+To set up the development environment, run:
+
+```sh
+yarn setup
+```
+
+This command will:
+- Install all dependencies
+- Set up git hooks for code quality
+
+### Pre-commit Hook
+
+The project includes a pre-commit hook that automatically runs before each commit to ensure code quality. The hook performs:
+
+1. **TypeScript Type Checking** - Validates all TypeScript types
+2. **Code Formatting** - Checks Prettier formatting
+3. **Test Suite** - Runs the full test suite
+
+If any check fails, the commit will be blocked until the issues are fixed.
+
+#### Manual Hook Installation
+
+If you need to reinstall the git hooks manually:
+
+```sh
+bash scripts/install-hooks.sh
+```
+
+#### Bypassing the Hook
+
+While not recommended, you can bypass the pre-commit hook in emergency situations:
+
+```sh
+git commit --no-verify -m "your message"
+```
+
+### Available Scripts
+
+```sh
+# Run tests
+yarn test
+
+# Run tests in watch mode
+yarn test:watch
+
+# Run tests with coverage report
+yarn test:coverage
+
+# Build the project
+yarn build
+
+# Clean build artifacts
+yarn clean:build
+```
+
 ## 💖 Code of Conduct
 
 This library has adopted a Code of Conduct that we expect project participants to adhere to. Please read the [full text](https://github.com/colorfy-software/localify/blob/master/CODE_OF_CONDUCT.md) so that you can understand what actions will and will not be tolerated.
