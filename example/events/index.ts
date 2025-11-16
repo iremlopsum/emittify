@@ -43,13 +43,9 @@ export interface ExampleEvents {
     isValid: boolean
   }
 
-  // API Polling Example (for future refactoring)
-  'api-data': {
-    temperature: number
-    humidity: number
-    pressure: number
-    timestamp: number
-  }
+  // API Polling Example - two events to demonstrate deduplication
+  'api-data-deduped': { value: number; status: string }
+  'api-data-no-dedup': { value: number; status: string }
 
   // Smart Notifications Example - only message and type for deduplication
   notification: {
@@ -79,7 +75,8 @@ export const exampleEmitter = new Emitter<ExampleEvents>({
     'stats-users',
     'stats-alerts',
     'form-state', // Form state should persist
-    'api-data', // API data should show last fetched values
+    'api-data-deduped', // API data should show last fetched values
+    'api-data-no-dedup', // Non-deduplicated API data
   ],
 
   // Deduplicated events - only emit when values actually change
@@ -101,8 +98,8 @@ export const exampleEmitter = new Emitter<ExampleEvents>({
     // Form state: deep comparison (nested validation state)
     { event: 'form-state', comparison: 'deep' },
 
-    // API data: deep comparison (object with multiple fields)
-    { event: 'api-data', comparison: 'deep' },
+    // API data: deep comparison - only the deduplicated version
+    { event: 'api-data-deduped', comparison: 'deep' },
 
     // Notification: deep comparison (prevents duplicate toast spam)
     { event: 'notification', comparison: 'deep' },

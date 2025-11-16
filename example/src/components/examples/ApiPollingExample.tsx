@@ -7,17 +7,68 @@ import { Button } from '../ui/button'
 import { Switch } from '../ui/switch'
 import { ExampleWrapper } from '../ExampleWrapper'
 
+import { exampleEmitter } from '../../../events'
+
 export function ApiPollingExample() {
+  // Subscribe to both deduplicated and non-deduplicated events
+  const dedupedData = exampleEmitter.useEventListener('api-data-deduped', {
+    value: 42,
+    status: 'idle',
+  })
+  const noDedupData = exampleEmitter.useEventListener('api-data-no-dedup', {
+    value: 42,
+    status: 'idle',
+  })
+
+  // UI state
   const [isPolling, setIsPolling] = useState(false)
   const [deduplication, setDeduplication] = useState(true)
   const [pollCount, setPollCount] = useState(0)
   const [updateCount, setUpdateCount] = useState(0)
-  const [currentData, setCurrentData] = useState({ value: 42, status: 'idle' })
   const [flashUpdate, setFlashUpdate] = useState(false)
   const [flashBlocked, setFlashBlocked] = useState(false)
-  const lastData = useRef(currentData)
-  const intervalRef = useRef<NodeJS.Timeout>()
 
+  const intervalRef = useRef<NodeJS.Timeout>()
+  const prevDedupedData = useRef(dedupedData)
+  const prevNoDedupData = useRef(noDedupData)
+
+  // Listen to deduplicated event - increment counter only if deduplication is ON
+  useEffect(() => {
+    if (dedupedData !== prevDedupedData.current) {
+      prevDedupedData.current = dedupedData
+
+      if (deduplication) {
+        setUpdateCount(prev => prev + 1)
+        setFlashUpdate(true)
+        setTimeout(() => setFlashUpdate(false), 300)
+      }
+    }
+  }, [dedupedData, deduplication])
+
+  // Listen to non-deduplicated event - increment counter only if deduplication is OFF
+  useEffect(() => {
+    if (noDedupData !== prevNoDedupData.current) {
+      prevNoDedupData.current = noDedupData
+
+      if (!deduplication) {
+        setUpdateCount(prev => prev + 1)
+        setFlashUpdate(true)
+        setTimeout(() => setFlashUpdate(false), 300)
+      }
+    }
+  }, [noDedupData, deduplication])
+
+  // Flash blocked animation when deduplication blocks an update
+  // This happens when noDedupData updates but dedupedData doesn't (while dedup is on)
+  useEffect(() => {
+    if (deduplication && noDedupData !== prevNoDedupData.current && dedupedData === prevDedupedData.current) {
+      setFlashBlocked(true)
+      const timer = setTimeout(() => setFlashBlocked(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [deduplication, dedupedData, noDedupData])
+
+  // Polling logic - sends to both events
   useEffect(() => {
     if (isPolling) {
       intervalRef.current = setInterval(() => {
@@ -25,25 +76,13 @@ export function ApiPollingExample() {
 
         // Simulate API response (sometimes same, sometimes different)
         const shouldChange = Math.random() > 0.7
-        const newValue = shouldChange ? Math.floor(Math.random() * 100) : lastData.current.value
+        const lastValue = deduplication ? dedupedData.value : noDedupData.value
+        const newValue = shouldChange ? Math.floor(Math.random() * 100) : lastValue
         const newData = { value: newValue, status: 'active' }
 
-        if (deduplication) {
-          // Check if data changed
-          if (JSON.stringify(newData) === JSON.stringify(lastData.current)) {
-            // Blocked by deduplication
-            setFlashBlocked(true)
-            setTimeout(() => setFlashBlocked(false), 300)
-            return
-          }
-        }
-
-        // Data updated
-        lastData.current = newData
-        setCurrentData(newData)
-        setUpdateCount(prev => prev + 1)
-        setFlashUpdate(true)
-        setTimeout(() => setFlashUpdate(false), 300)
+        // Send to BOTH events - Emittify handles deduplication for dedupedData
+        exampleEmitter.send('api-data-deduped', newData)
+        exampleEmitter.send('api-data-no-dedup', newData)
       }, 2000)
     } else {
       if (intervalRef.current) {
@@ -56,15 +95,25 @@ export function ApiPollingExample() {
         clearInterval(intervalRef.current)
       }
     }
-  }, [isPolling, deduplication])
+  }, [isPolling, deduplication, dedupedData.value, noDedupData.value])
 
   const reset = () => {
     setIsPolling(false)
     setPollCount(0)
     setUpdateCount(0)
-    setCurrentData({ value: 42, status: 'idle' })
-    lastData.current = { value: 42, status: 'idle' }
+
+    // Reset both events to initial state
+    const initialData = { value: 42, status: 'idle' }
+    exampleEmitter.send('api-data-deduped', initialData)
+    exampleEmitter.send('api-data-no-dedup', initialData)
+
+    // Update refs
+    prevDedupedData.current = initialData
+    prevNoDedupData.current = initialData
   }
+
+  // Get current data based on deduplication toggle
+  const currentData = deduplication ? dedupedData : noDedupData
 
   return (
     <ExampleWrapper
@@ -156,12 +205,15 @@ export function ApiPollingExample() {
         </motion.div>
 
         <div className="bg-[#1e1e2e] rounded-lg p-4 border border-gray-700">
-          <code className="text-sm text-gray-300">
+          <code className="text-sm text-gray-300 whitespace-pre">
             <span className="text-gray-500">// Blocks duplicate API responses</span>
             {'\n'}
-            <span className="text-purple-400">new</span> <span className="text-yellow-400">Emittify</span>({'{'}{' '}
-            <span className="text-cyan-400">deduplicatedEvents</span>: [
-            <span className="text-green-400">'api-data'</span>] {'}'})
+            <span className="text-purple-400">const</span> data = emitter.
+            <span className="text-yellow-400">useEventListener</span>(
+            <span className="text-green-400">'api-data-deduped'</span>, {'{'}
+            {'}'}){'\n'}
+            emitter.<span className="text-yellow-400">send</span>(
+            <span className="text-green-400">'api-data-deduped'</span>, newData)
           </code>
         </div>
       </div>
