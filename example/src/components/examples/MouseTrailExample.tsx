@@ -16,17 +16,23 @@ export function MouseTrailExample() {
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const particleId = useRef(0)
+  const particlesRef = useRef<Particle[]>(particles)
+
+  // Keep particlesRef in sync with particles state
+  useEffect(() => {
+    particlesRef.current = particles
+  }, [particles])
 
   useEffect(() => {
     const interval = setInterval(() => {
       // Clean up old particles by emitting filtered array
-      const activeParticles = particles.filter((p: Particle) => Date.now() - p.timestamp < 2000)
-      if (activeParticles.length !== particles.length) {
+      const activeParticles = particlesRef.current.filter((p: Particle) => Date.now() - p.timestamp < 2000)
+      if (activeParticles.length !== particlesRef.current.length) {
         exampleEmitter.send('mouse-particles', activeParticles)
       }
     }, 50)
     return () => clearInterval(interval)
-  }, [particles])
+  }, [])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return

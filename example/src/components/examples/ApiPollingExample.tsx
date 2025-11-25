@@ -32,6 +32,22 @@ export function ApiPollingExample() {
   const intervalRef = useRef<NodeJS.Timeout>()
   const prevDedupedData = useRef(dedupedData)
   const prevNoDedupData = useRef(noDedupData)
+  const dedupedDataRef = useRef(dedupedData)
+  const noDedupDataRef = useRef(noDedupData)
+  const deduplicationRef = useRef(deduplication)
+
+  // Keep refs in sync with latest values
+  useEffect(() => {
+    dedupedDataRef.current = dedupedData
+  }, [dedupedData])
+
+  useEffect(() => {
+    noDedupDataRef.current = noDedupData
+  }, [noDedupData])
+
+  useEffect(() => {
+    deduplicationRef.current = deduplication
+  }, [deduplication])
 
   // Listen to deduplicated event - increment counter only if deduplication is ON
   useEffect(() => {
@@ -77,7 +93,7 @@ export function ApiPollingExample() {
 
         // Simulate API response (sometimes same, sometimes different)
         const shouldChange = Math.random() > 0.7
-        const lastValue = deduplication ? dedupedData.value : noDedupData.value
+        const lastValue = deduplicationRef.current ? dedupedDataRef.current.value : noDedupDataRef.current.value
         const newValue = shouldChange ? Math.floor(Math.random() * 100) : lastValue
         const newData = { value: newValue, status: 'active' }
 
@@ -96,7 +112,7 @@ export function ApiPollingExample() {
         clearInterval(intervalRef.current)
       }
     }
-  }, [isPolling, deduplication, dedupedData.value, noDedupData.value])
+  }, [isPolling, deduplication])
 
   const reset = () => {
     setIsPolling(false)
@@ -180,8 +196,8 @@ export function ApiPollingExample() {
             backgroundColor: flashUpdate
               ? 'rgba(16, 185, 129, 0.2)'
               : flashBlocked
-              ? 'rgba(107, 114, 128, 0.2)'
-              : 'rgba(31, 41, 55, 0.5)',
+                ? 'rgba(107, 114, 128, 0.2)'
+                : 'rgba(31, 41, 55, 0.5)',
           }}
           className="rounded-lg p-6 border border-gray-700">
           <div className="flex items-center justify-between mb-4">
