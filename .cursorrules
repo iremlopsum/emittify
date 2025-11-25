@@ -1,0 +1,446 @@
+# Emittify Project - Cursor Rules
+
+## Project Overview
+Emittify is a tiny TypeScript event emitter library with first-class TypeScript support, event caching, deduplication, and React hooks. The library is designed to be lightweight, type-safe, and highly performant.
+
+## Tech Stack
+- **Language**: TypeScript 5.9+
+- **Build**: TypeScript Compiler (tsc)
+- **Testing**: Jest with ts-jest, @testing-library/react
+- **Runtime**: Node.js (library), React 19+ (hooks)
+- **Dependencies**: fast-deep-equal (deep comparison)
+
+## Code Style & Conventions
+
+### TypeScript
+- Use **strict TypeScript** with explicit types
+- Prefer **interfaces** for event type definitions
+- Use **generic types** extensively for type safety
+- Avoid `any` - use `unknown` if type is truly unknown
+- Use **const assertions** for literal types where appropriate
+- Private class methods should use **arrow functions** for binding
+
+### Naming Conventions
+- **Event names**: Use kebab-case (e.g., `'mouse-position'`, `'user-preferences'`)
+- **Files**: Use kebab-case for file names (e.g., `index.ts`, `mouse-trail-example.tsx`)
+- **Classes**: PascalCase (e.g., `Emitter`, `MouseTrailExample`)
+- **Functions/Methods**: camelCase (e.g., `send()`, `listen()`, `useEventListener()`)
+- **Constants**: UPPER_SNAKE_CASE for true constants, camelCase for exported instances
+- **Types/Interfaces**: PascalCase with descriptive suffixes (e.g., `EventsType`, `OptionsType`, `DeduplicationConfig`)
+
+### Code Structure
+- Use **class-based architecture** for core library functionality
+- Prefer **Map** over plain objects for internal state management
+- Use **arrow functions** for class methods that need `this` binding
+- Keep **private methods** truly private (marked with `private` keyword)
+- Export **default** for main classes, **named exports** for utilities
+
+### Comments & Documentation
+- Add **JSDoc comments** for:
+  - All public methods and properties
+  - Complex private methods
+  - Type definitions and interfaces
+- Use `@example` tags in JSDoc to show usage patterns
+- Comment complex logic inline with single-line `//` comments
+- Keep comments concise but descriptive
+
+## Architecture Patterns
+
+### Core Library (`src/index.ts`)
+- Main `Emitter` class with generic type parameter for events
+- Use `Map` data structures for receivers, listeners, cache, and deduplication
+- Implement comparison strategies (shallow vs deep) for deduplication
+- Return listener objects with `clearListener()` method for cleanup
+
+### React Integration (`src/react/index.ts`)
+- Extend base `Emitter` class
+- Add `useEventListener()` hook that combines `useState` and `useEffect`
+- Return cached values as initial state when available
+- Clean up listeners in `useEffect` return function
+
+### Example App (`example/`)
+- Centralize all event definitions in `example/events/index.ts`
+- Export a single `exampleEmitter` instance
+- Use Emittify for shared/demonstrable state
+- Keep UI-only state (modals, dropdowns) as React state
+- Keep event counters as React state to show emission frequency
+
+## Testing Guidelines
+
+### Test Structure
+- Organize tests with `describe` blocks for grouping
+- Use descriptive test names with `it('should...')` format
+- Test both positive and negative cases
+- Test edge cases and error conditions
+
+### Test Coverage
+- Maintain **90% coverage** threshold for:
+  - Branches
+  - Functions
+  - Lines
+  - Statements
+- Cover all public methods
+- Test deduplication logic thoroughly
+- Test caching behavior
+- Test cleanup and memory management
+
+### Test Patterns
+```typescript
+describe('FeatureName', () => {
+  describe('methodName()', () => {
+    it('should handle the happy path', () => {
+      // Arrange
+      const emitter = new Emitter<Events>()
+      
+      // Act
+      const result = emitter.method()
+      
+      // Assert
+      expect(result).toBe(expected)
+    })
+  })
+})
+```
+
+## Event Emitter Design
+
+### Event Type Definitions
+Always define event types in an interface:
+```typescript
+interface EventsType {
+  'event-name': PayloadType
+  'another-event': { id: number; data: string }
+}
+
+const emitter = new Emitter<EventsType>()
+```
+
+### Caching Strategy
+Cache events when:
+- New subscribers need immediate values
+- State persists across component mounts
+- Initial value is important for UX
+
+Don't cache:
+- Transient events (clicks, hovers)
+- Events representing actions, not state
+- High-frequency events where only latest matters
+
+### Deduplication Strategy
+Use **shallow comparison** for:
+- Primitives (string, number, boolean)
+- Flat objects with primitive values
+- Performance-critical events
+
+Use **deep comparison** for:
+- Nested objects
+- Arrays of objects
+- Complex data structures
+
+## File Organization
+
+### Project Structure
+```
+src/
+  index.ts              # Core Emitter class
+  react/
+    index.ts            # React hooks integration
+  __tests__/
+    index.test.ts       # Core library tests
+    react/
+      index.test.tsx    # React hooks tests
+    
+example/
+  events/
+    index.ts            # Centralized event definitions
+  src/
+    components/         # Example components
+    
+dist/                   # Build output (gitignored)
+coverage/               # Test coverage reports (gitignored)
+```
+
+### Import Order
+
+Imports must be organized in **ascending line length order** within each block, separated by blank lines:
+
+1. **[LIBRARIES]** - External dependencies (React, npm packages)
+2. **[COMPONENTS]** - `.tsx` files (React components)
+3. **[FUNCTIONS]** - `.ts` files (utilities, helpers, hooks)
+4. **[FILE_IMPORTS]** - Static assets (images, CSS, fonts, etc.)
+
+**Rules:**
+- Sort imports within each block by line length (shortest to longest)
+- Separate each block with a blank line
+- Type-only imports go at the end of their respective block
+- Multi-line imports count as a single import for sorting
+
+Example:
+```typescript
+// [LIBRARIES]
+import { motion } from 'motion/react'
+import { useState, useRef, useEffect } from 'react'
+
+// [COMPONENTS]
+import { Card } from '../ui/card'
+import { Button } from '../ui/button'
+import { ExampleWrapper } from '../ExampleWrapper'
+
+// [FUNCTIONS]
+import { cn } from '../utils'
+import { exampleEmitter } from '../../../events'
+
+// [FILE_IMPORTS]
+import './styles.css'
+import logo from './logo.svg'
+
+// Type imports at the end
+import type { Particle } from '../../../events'
+```
+
+**Common Patterns:**
+
+For simple files:
+```typescript
+import Emitter from '@colorfy-software/emittify/react'
+
+import { exampleEmitter } from '../../events'
+```
+
+For complex components:
+```typescript
+// [LIBRARIES]
+import { motion } from 'motion/react'
+import { useState, useRef, useEffect } from 'react'
+
+// [COMPONENTS]
+import { ExampleWrapper } from '../ExampleWrapper'
+
+// [FUNCTIONS]
+import { exampleEmitter, type Particle } from '../../../events'
+```
+
+## Git & Version Control
+
+### Commit Messages
+
+Follow **Conventional Commits** format for clear, semantic version control:
+
+```
+<type>(<scope>): <short description>
+
+[optional body]
+
+[optional footer]
+```
+
+#### Commit Types
+
+- **feat**: New feature for the user
+- **fix**: Bug fix for the user
+- **docs**: Documentation changes
+- **chore**: Maintenance tasks (deps, tooling, config)
+- **test**: Adding or updating tests
+- **refactor**: Code changes that neither fix bugs nor add features
+- **perf**: Performance improvements
+- **style**: Code style changes (formatting, missing semicolons, etc.)
+
+#### Breaking Changes
+
+For breaking changes, add `!` after the type/scope and include `BREAKING CHANGE:` in the footer:
+
+```
+feat(core)!: change Emitter constructor to require event types
+
+BREAKING CHANGE: Emitter now requires explicit event type parameter.
+Migration: Change `new Emitter()` to `new Emitter<YourEventType>()`
+```
+
+#### When to Include a Body
+
+**Always include a body for:**
+- Features (`feat`)
+- Bug fixes (`fix`)
+- Breaking changes
+- Refactors that affect multiple files
+
+**Body optional for:**
+- Documentation changes (`docs`)
+- Simple chores (`chore`)
+- Trivial style fixes
+
+**Body structure:**
+1. **First paragraph**: Explain WHAT and WHY (not HOW)
+2. **Bullet points**: List specific changes made
+3. **Benefits section** (optional): Explain advantages
+4. **Footer** (optional): Reference issues with `Fixes #123` or `Closes #456`
+
+#### Examples
+
+**Feature with body:**
+```
+feat(react-hooks): add useEventListener hook for React components
+
+Introduces a new React hook that combines event listening with state management.
+This hook automatically handles cleanup and provides cached values as initial state.
+
+- Added useEventListener() to react/index.ts
+- Integrated with existing caching mechanism
+- Handles component unmount cleanup automatically
+
+Benefits:
+- Reduces boilerplate in React components
+- Prevents memory leaks through automatic cleanup
+- Type-safe with full TypeScript support
+```
+
+**Bug fix with body:**
+```
+fix(deduplication): prevent cache memory leak on clearCache()
+
+The deduplication cache was not being cleared when clearCache() was called,
+causing memory to grow unbounded in long-running applications.
+
+- Clear deduplication cache in clearCache() method
+- Add test coverage for cache clearing
+- Update documentation with memory management notes
+
+Fixes #42
+```
+
+**Simple commit (no body):**
+```
+docs(readme): fix typo in installation section
+```
+
+**Chore commit:**
+```
+chore(deps): upgrade TypeScript to 5.9.0
+```
+
+**Breaking change:**
+```
+feat(core)!: change Emitter constructor to require event types
+
+BREAKING CHANGE: Emitter now requires explicit event type parameter.
+Migration: Change `new Emitter()` to `new Emitter<YourEventType>()`
+
+This improves type safety by making event types mandatory rather than optional.
+Prevents runtime errors from undefined event types.
+```
+
+#### Common Scopes
+
+- `core` - Core Emitter class functionality
+- `react-hooks` - React integration
+- `deduplication` - Deduplication logic
+- `caching` - Cache management
+- `types` - TypeScript type definitions
+- `deps` - Dependencies
+- `tests` - Test suite
+- `docs` - Documentation
+- `examples` - Example app
+- `build` - Build configuration
+
+### Pre-commit Checks
+
+The project has pre-commit hooks that run:
+1. TypeScript type checking
+2. Prettier formatting check
+3. Full test suite
+
+Don't bypass hooks with `--no-verify` unless absolutely necessary.
+
+## Build & Release
+
+### Build Process
+- Uses TypeScript compiler directly (no bundler)
+- Outputs to `dist/` directory
+- Generates `.d.ts` type declaration files
+- Maintains separate entry points: `./` and `./react`
+
+### Release Process
+- Uses `release-it` for automated releases
+- Commit message format: `chore(release): release emittify ${version}`
+- Publishes to npm as `@colorfy-software/emittify`
+- Creates GitHub releases automatically
+
+## Common Patterns
+
+### Creating a New Event
+1. Add type to `ExampleEvents` interface in `example/events/index.ts`
+2. Configure caching/deduplication if needed
+3. Use `useEventListener()` in components
+4. Emit with `send()`
+
+### Adding a New Method
+1. Add to base `Emitter` class in `src/index.ts`
+2. Add comprehensive tests
+3. Update TypeScript types
+4. Add JSDoc documentation
+5. Update README.md with usage example
+
+### Creating Example Components
+- Use `ExampleWrapper` for consistent layout
+- Import `exampleEmitter` from centralized events
+- Show event counters to demonstrate emission
+- Include code snippet showing actual usage
+- Use Emittify for demonstrable state, React state for UI
+
+## Performance Considerations
+
+- Use **shallow comparison** by default for better performance
+- Only use **deep comparison** when nested object changes must be detected
+- Clean up listeners properly to prevent memory leaks
+- Use `useEffect` dependencies correctly in React hooks
+- Avoid creating new event definitions in loops
+
+## Anti-Patterns to Avoid
+
+❌ Don't create multiple emitter instances for same events
+❌ Don't use `any` type for event payloads
+❌ Don't forget to clean up listeners
+❌ Don't cache transient/action events
+❌ Don't use deep comparison for primitives
+❌ Don't bypass pre-commit hooks without good reason
+❌ Don't mix event state with pure UI state
+❌ Don't create events for every piece of state
+
+## When to Use Emittify vs React State
+
+### Use Emittify When:
+✅ State could be shared across components
+✅ State changes frequently and benefits from caching
+✅ You want to demonstrate event emission
+✅ State benefits from deduplication
+✅ State represents application data
+
+### Use React State When:
+✅ Pure UI state (modal open/closed, dropdown state)
+✅ Temporary/transient state
+✅ State only used in one component
+✅ State doesn't benefit from event emission pattern
+
+## Debugging Tips
+
+- Use event counters to track emission frequency
+- Check deduplication cache with `clearDeduplicationCache()`
+- Inspect cached values with `getCache()`
+- Use `jest --coverage` to find untested code paths
+- Check listener cleanup with memory profiling tools
+
+## Questions to Ask When Writing Code
+
+1. Should this event be cached? Why or why not?
+2. Should this event be deduplicated? Shallow or deep?
+3. Is this state truly shared, or is it UI-only?
+4. Are listeners properly cleaned up?
+5. Are types explicit and avoid `any`?
+6. Is the test coverage maintained at 90%+?
+7. Does this follow the project's naming conventions?
+8. Is the JSDoc documentation clear and helpful?
+
+---
+
+**Remember**: Emittify is a library focused on simplicity, type safety, and performance. Every addition should serve these core principles.
+

@@ -1,4 +1,4 @@
-import { motion } from 'motion/react'
+import { useState, useEffect, useRef } from 'react'
 
 const apiMethods = [
   {
@@ -34,34 +34,63 @@ const apiMethods = [
 ]
 
 export function ApiCards() {
+  const [isVisible, setIsVisible] = useState(false)
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const hasAnimated = useRef(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true
+          // Small delay to ensure stable render
+          requestAnimationFrame(() => {
+            setIsVisible(true)
+          })
+          observer.disconnect()
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px',
+      },
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <section className="py-24 px-6">
+    <section ref={sectionRef} className="py-24 px-6">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}>
+        <div
+          className={`transition-all duration-600 ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
+          }`}>
           <h2 className="text-center mb-4">API Reference</h2>
           <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">Simple, powerful, and fully typed</p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {apiMethods.map((method, index) => (
-            <motion.div
+            <div
               key={method.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="bg-linear-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-6 border border-gray-800 hover:border-cyan-500/50 transition-all duration-300">
+              className={`bg-linear-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-6 border border-gray-800 hover:border-cyan-500/50 transition-all duration-500 ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
+              }`}
+              style={{
+                transitionDelay: isVisible ? `${index * 80}ms` : '0ms',
+              }}>
               <h3 className="mb-2 text-cyan-400">{method.name}</h3>
               <code className="text-sm text-gray-500 block mb-4">{method.signature}</code>
               <p className="text-gray-400 mb-4">{method.description}</p>
               <div className="bg-[#1e1e2e] rounded-lg p-3 border border-gray-700">
                 <code className="text-sm text-purple-300">{method.example}</code>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
