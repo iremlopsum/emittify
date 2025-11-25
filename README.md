@@ -20,7 +20,7 @@
 ## 🎯 Purpose
 
 Emittify is a tiny event emitter written with first class Typescript support.
-It supports caching, event deduplication, and has hooks for both React and Solid.
+It supports caching, event deduplication, and has React hooks.
 
 ## 🏗️ Installation
 
@@ -270,12 +270,6 @@ jest.mock('@colorfy-software/emittify', () => require('@colorfy-software/emittif
 import Emittify from '@colorfy-software/emittify/react'
 ```
 
-#### Solid
-
-```ts
-import Emittify from '@colorfy-software/emittify/solid'
-```
-
 #### Usage
 
 ```tsx
@@ -373,6 +367,7 @@ yarn setup
 ```
 
 This command will:
+
 - Install all dependencies
 - Set up git hooks for code quality
 

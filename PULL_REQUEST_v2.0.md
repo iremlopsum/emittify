@@ -1,6 +1,7 @@
 # 🚀 Emittify v2.0 - Major Update
 
 ## Overview
+
 This PR represents a major version update to Emittify, introducing powerful new features, comprehensive testing infrastructure, a fully-featured example application, and important breaking changes. The library now includes event deduplication, 100% test coverage, and a production-ready demo showcasing all capabilities.
 
 ---
@@ -8,6 +9,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 ## ✨ New Features
 
 ### 🎯 Event Deduplication
+
 - **Deep & shallow comparison** strategies to prevent redundant emissions
 - Uses `fast-deep-equal` for nested objects and arrays
 - Configurable per-event with intelligent comparison strategy selection
@@ -17,6 +19,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 - [Commit: 0bc70d0]
 
 ### 🧪 Comprehensive Test Infrastructure
+
 - **107 tests** with **100% code coverage** (statements, functions, lines)
 - Jest with TypeScript support (`ts-jest`)
 - Testing library suite: `@testing-library/react`, `@testing-library/jest-dom`
@@ -31,6 +34,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 - [Commit: 3c01c55]
 
 ### 📱 Production-Ready Example Application
+
 - **Full-featured demo** built with Vite + React + Tailwind CSS v4 + Motion
 - **7 interactive examples** demonstrating all library capabilities:
   - Mouse Trail with particle system
@@ -46,6 +50,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 - [Commits: 023cf2f, 6ae33e1, 9606e43, 8db631e, 11b98c8, 1113aae, 7b29ca7, 6aacb76, 2b1cb47, 4fee79c]
 
 ### 🔧 Development Tools
+
 - **Pre-commit hooks** with type checking, formatting, and test validation
 - Automated setup script (`scripts/setup.sh`)
 - Hook installation script
@@ -53,6 +58,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 - [Commits: d298901, 99910a6]
 
 ### 🎨 Animation System
+
 - Centralized animation constants (`constants/animations.ts`)
 - Reusable spring configs and motion variants
 - Hover animations (scale, lift, pulse)
@@ -65,12 +71,14 @@ This PR represents a major version update to Emittify, introducing powerful new 
 ## 💥 Breaking Changes
 
 ### ❌ Solid.js Support Removed
+
 - Removed `src/solid/` directory entirely
 - Removed `solid-js` from peer and dev dependencies
 - **Migration:** If you were using Solid.js, you'll need to stay on v1.x or migrate to React
 - [Commit: e2b74f0]
 
 ### 📦 Dependency Updates
+
 - **React:** `^18.2.0` → `^19.0.0` (then relaxed to `*` for broader compatibility)
 - **TypeScript:** `^4.7.4` → `^5.9.3`
 - **@types/react:** `^18.0.17` → `^19.2.5`
@@ -78,6 +86,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 - [Commits: 799c56e, 185f366]
 
 ### 🏗️ Architecture Changes
+
 - React Emitter now **extends** base Emitter (reduced from 149 to 24 lines)
 - Exported `OptionsType` interface for consumer usage
 - No API changes, fully backward compatible
@@ -88,6 +97,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 ## 🔨 Refactoring & Improvements
 
 ### 🎯 Example Application Refactoring
+
 - Created `EMITTIFY_REFACTORING_GUIDE.md` with best practices
 - Centralized event definitions in `example/events/index.ts`
 - All 7 example components now properly use Emittify
@@ -97,6 +107,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 - [All example refactoring commits]
 
 ### 🎨 UI/UX Improvements
+
 - Upgraded to **Tailwind CSS v4** (beta.7)
 - CSS-based configuration (removed config files)
 - Fixed deprecated gradient classes (`bg-gradient-to-*` → `bg-linear-to-*`)
@@ -105,6 +116,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 - [Commits: 6ae33e1, 66e7ee9, 2d72137]
 
 ### 📝 Documentation
+
 - Added comprehensive refactoring guide
 - Testing documentation with patterns and best practices
 - Setup and development instructions
@@ -140,6 +152,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 ### From v1.x to v2.0
 
 #### If Using Solid.js
+
 ```typescript
 // ❌ No longer supported
 import Emitter from '@colorfy-software/emittify/solid'
@@ -148,6 +161,7 @@ import Emitter from '@colorfy-software/emittify/solid'
 ```
 
 #### If Using React
+
 ```typescript
 // ✅ No changes needed - fully backward compatible!
 import Emitter from '@colorfy-software/emittify/react'
@@ -156,12 +170,13 @@ import Emitter from '@colorfy-software/emittify/react'
 const emitter = new Emitter<Events>({
   deduplicatedEvents: {
     'user-profile': { strategy: 'deep' },
-    'counter': { strategy: 'shallow' }
-  }
+    counter: { strategy: 'shallow' },
+  },
 })
 ```
 
 #### Dependency Updates
+
 - Update `react` to `^19.0.0` (or continue with older versions - peerDep is `*`)
 - Update `typescript` to `^5.0.0+` if using TypeScript
 - Run `yarn install` or `npm install`
@@ -171,6 +186,7 @@ const emitter = new Emitter<Events>({
 ## 🔗 Example Application
 
 Try the live demo locally:
+
 ```bash
 cd example
 yarn install
@@ -203,6 +219,7 @@ Visit `http://localhost:5173` to see all 7 interactive examples in action!
 ## 🙏 Next Steps
 
 After merging:
+
 - [ ] Publish to npm as `v2.0.0`
 - [ ] Update GitHub release notes
 - [ ] Deploy example application (if desired)
@@ -245,10 +262,10 @@ After merging:
 ---
 
 **This is a major version bump due to:**
+
 1. Solid.js support removal (breaking change)
 2. Major dependency updates (React 19, TypeScript 5.9)
 3. Significant new features (deduplication, comprehensive testing)
 4. Production-ready example application
 
 **Recommended version:** `2.0.0`
-
