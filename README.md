@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://github.com/colorfy-software/emittify/" target="_blank" rel="noopener noreferrer">
+  <a href="https://github.com/iremlopsum/emittify/" target="_blank" rel="noopener noreferrer">
     🛩 Emittify
   </a>
 </h1>
@@ -10,7 +10,10 @@
 
 <p align="center">
   <a href="https://www.npmjs.org/package/@iremlopsum/emittify">
-    <img src="https://badge.fury.io/js/@colorfy-software%2Femittify.svg" alt="Current npm package version." />
+    <img src="https://badge.fury.io/js/@iremlopsum%2Femittify.svg" alt="Current npm package version." />
+  </a>
+  <a href="https://iremlopsum.github.io/emittify/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/🌐-Live%20Demo-blue" alt="Live Demo" />
   </a>
   <a href="#">
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome!" />
@@ -21,6 +24,8 @@
 
 Emittify is a tiny event emitter written with first class Typescript support.
 It supports caching, event deduplication, and has React hooks.
+
+> 🌐 **[Try the live demo →](https://iremlopsum.github.io/emittify/)** - Interactive examples showcasing all features
 
 ## 🏗️ Installation
 
