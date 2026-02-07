@@ -16,7 +16,7 @@ export function CodeSetup() {
             <pre className="text-sm overflow-x-auto">
               <code className="text-gray-300">
                 <span className="text-purple-400">import</span> Emittify <span className="text-purple-400">from</span>{' '}
-                <span className="text-green-400">'@colorfy-software/emittify/react'</span>
+                <span className="text-green-400">'@iremlopsum/emittify/react'</span>
                 {'\n'}
                 {'\n'}
                 <span className="text-gray-500">// Define your events interface</span>

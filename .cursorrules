@@ -202,7 +202,7 @@ import type { Particle } from '../../../events'
 
 For simple files:
 ```typescript
-import Emitter from '@colorfy-software/emittify/react'
+import Emitter from '@iremlopsum/emittify/react'
 
 import { exampleEmitter } from '../../events'
 ```
@@ -362,7 +362,7 @@ Don't bypass hooks with `--no-verify` unless absolutely necessary.
 ### Release Process
 - Uses `release-it` for automated releases
 - Commit message format: `chore(release): release emittify ${version}`
-- Publishes to npm as `@colorfy-software/emittify`
+- Publishes to npm as `@iremlopsum/emittify`
 - Creates GitHub releases automatically
 
 ## Common Patterns

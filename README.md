@@ -9,7 +9,7 @@
 </h4>
 
 <p align="center">
-  <a href="https://www.npmjs.org/package/@colorfy-software/emittify">
+  <a href="https://www.npmjs.org/package/@iremlopsum/emittify">
     <img src="https://badge.fury.io/js/@colorfy-software%2Femittify.svg" alt="Current npm package version." />
   </a>
   <a href="#">
@@ -25,7 +25,7 @@ It supports caching, event deduplication, and has React hooks.
 ## 🏗️ Installation
 
 ```sh
-yarn add @colorfy-software/emittify
+yarn add @iremlopsum/emittify
 ```
 
 ## 💻 Usage
@@ -36,7 +36,7 @@ yarn add @colorfy-software/emittify
 // events-core.ts
 
 // Import the emittify module.
-import Emittify from '@colorfy-software/emittify'
+import Emittify from '@iremlopsum/emittify'
 // Importing toast notification component props type to use in the emittify module.
 import type { ToastNotificationPropsType } from '@components/ToastNotification'
 
@@ -259,7 +259,7 @@ setupFiles: ['<rootDir>/jest.setup.js']
 You can then add the following line to that setup file to mock the `NativeModule.RNPermissions`:
 
 ```js
-jest.mock('@colorfy-software/emittify', () => require('@colorfy-software/emittify/mock'))
+jest.mock('@iremlopsum/emittify', () => require('@iremlopsum/emittify/mock'))
 ```
 
 ### 🪝 Hooks
@@ -267,7 +267,7 @@ jest.mock('@colorfy-software/emittify', () => require('@colorfy-software/emittif
 #### React
 
 ```ts
-import Emittify from '@colorfy-software/emittify/react'
+import Emittify from '@iremlopsum/emittify/react'
 ```
 
 #### Usage

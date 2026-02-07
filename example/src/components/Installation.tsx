@@ -8,7 +8,7 @@ import { FADE_UP_VIEW_MOTION, SPRING_CONFIG } from '../constants/animations'
 
 export function Installation() {
   const [copied, setCopied] = useState(false)
-  const installCommand = 'yarn add @colorfy-software/emittify'
+  const installCommand = 'yarn add @iremlopsum/emittify'
 
   const handleCopy = () => {
     navigator.clipboard.writeText(installCommand)
@@ -36,7 +36,7 @@ export function Installation() {
           </div>
 
           <div className="mt-4 text-center text-sm text-gray-500">
-            or <code className="text-gray-400">npm install @colorfy-software/emittify</code>
+            or <code className="text-gray-400">npm install @iremlopsum/emittify</code>
           </div>
         </motion.div>
       </div>

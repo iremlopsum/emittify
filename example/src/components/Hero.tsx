@@ -60,7 +60,7 @@ export function Hero() {
               <pre className="text-left text-sm overflow-x-auto">
                 <code className="text-gray-300">
                   <span className="text-purple-400">import</span> Emittify <span className="text-purple-400">from</span>{' '}
-                  <span className="text-green-400">'@colorfy-software/emittify'</span>
+                  <span className="text-green-400">'@iremlopsum/emittify'</span>
                   {'\n'}
                   {'\n'}
                   <span className="text-cyan-400">const</span> emitter = <span className="text-purple-400">new</span>{' '}

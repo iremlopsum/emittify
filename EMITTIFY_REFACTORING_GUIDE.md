@@ -30,7 +30,7 @@ All example events are defined in a single file: `example/events/index.ts`
 
 ```typescript
 // example/events/index.ts
-import Emitter from '@colorfy-software/emittify/react'
+import Emitter from '@iremlopsum/emittify/react'
 
 // Define all event types in one interface
 interface ExampleEvents {

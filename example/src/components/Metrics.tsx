@@ -114,10 +114,10 @@ export function Metrics() {
           transition={{ ...SPRING_CONFIG, duration: 0.6, delay: 0.5 }}
           className="flex flex-wrap justify-center gap-3 mt-12">
           <Badge className="bg-gray-800 border-gray-700">
-            <img src="https://img.shields.io/npm/v/@colorfy-software/emittify.svg" alt="npm version" className="h-5" />
+            <img src="https://img.shields.io/npm/v/@iremlopsum/emittify.svg" alt="npm version" className="h-5" />
           </Badge>
           <Badge className="bg-gray-800 border-gray-700">
-            <img src="https://img.shields.io/npm/dm/@colorfy-software/emittify.svg" alt="downloads" className="h-5" />
+            <img src="https://img.shields.io/npm/dm/@iremlopsum/emittify.svg" alt="downloads" className="h-5" />
           </Badge>
           <Badge className="bg-gray-800 border-gray-700">
             <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" className="h-5" />

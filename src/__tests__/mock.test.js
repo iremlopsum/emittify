@@ -167,7 +167,7 @@ describe('EmittifyMock', () => {
   describe('Integration with jest.mock()', () => {
     it('should be usable as a mock in tests', () => {
       // This demonstrates how the mock would be used in actual tests
-      // In real usage, users would do: jest.mock('@colorfy-software/emittify', () => require('@colorfy-software/emittify/mock'))
+      // In real usage, users would do: jest.mock('@iremlopsum/emittify', () => require('@iremlopsum/emittify/mock'))
       const EmittifyMock = require('../../mock.js').default
       const instance = new EmittifyMock()
 

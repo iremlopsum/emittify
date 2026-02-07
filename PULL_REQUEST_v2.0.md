@@ -155,7 +155,7 @@ This PR represents a major version update to Emittify, introducing powerful new 
 
 ```typescript
 // ❌ No longer supported
-import Emitter from '@colorfy-software/emittify/solid'
+import Emitter from '@iremlopsum/emittify/solid'
 
 // ✅ Stay on v1.x or migrate to React
 ```
@@ -164,7 +164,7 @@ import Emitter from '@colorfy-software/emittify/solid'
 
 ```typescript
 // ✅ No changes needed - fully backward compatible!
-import Emitter from '@colorfy-software/emittify/react'
+import Emitter from '@iremlopsum/emittify/react'
 
 // NEW: Optional deduplication
 const emitter = new Emitter<Events>({
