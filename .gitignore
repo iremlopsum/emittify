@@ -11,3 +11,5 @@ coverage/
 *.swo
 *~
 *.tgz
+# Yarn is the package manager; keep npm from creating a second lockfile
+package-lock.json
