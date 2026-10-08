@@ -129,10 +129,11 @@ class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof Event
     const id = Math.random().toString(16)
     const receivers = this.receivers.get(key)
 
-    if (this.options?.cachedEvents?.includes(key) && this.cachedMessages.has(key)) {
+    // A cached `undefined` means "cleared", so it is not replayed. Other falsy values (0, false, '', null) are.
+    if (this.options?.cachedEvents?.includes(key)) {
       const values = this.cachedMessages.get(key) as EventsType[K]
 
-      if (values) {
+      if (values !== undefined) {
         callback(values)
       }
     }
@@ -160,11 +161,10 @@ class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof Event
     key: K,
     fallbackValue?: V,
   ): V extends undefined ? EventsType[K] : V => {
-    if (this.cachedMessages.has(key)) {
-      return this.cachedMessages.get(key) as EventsType[K]
-    }
+    // A cached `undefined` means "cleared", so the fallback is used instead
+    const cached = this.cachedMessages.get(key)
 
-    return fallbackValue as EventsType[K]
+    return (cached === undefined ? fallbackValue : cached) as EventsType[K]
   }
 
   clear = (id: string) => {
