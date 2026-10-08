@@ -33,6 +33,9 @@ It supports caching, event deduplication, and has React hooks.
 yarn add @iremlopsum/emittify
 ```
 
+React is an **optional** peer dependency. The core (`@iremlopsum/emittify`) has no React dependency and works in any
+framework or plain JS/TS. You only need `react` (>= 16.8) installed if you import the hooks from `@iremlopsum/emittify/react`.
+
 ## 💻 Usage
 
 ### 🆕 Creating an Emitter with types
@@ -310,19 +313,30 @@ listener.event // Name of the event
 listener.clearListener() // Clears the listener
 ```
 
+If the event is in `cachedEvents` and has a cached value, the callback is called immediately with that value.
+Falsy values such as `0`, `false`, `''` and `null` are replayed like any other value. A cached `undefined` is treated as
+"no value" (for example after `send('event-name', undefined)` to clear it) and is not replayed. Active listeners still
+receive every `send()`, including `undefined`.
+
 #### `useEventListener()`
 
 ```ts
-// Emits an event with specified name and value. Returns cached value if one exists, otherwise returns initial value if that is provided.
+// Subscribes to the event and returns its latest value. Starts from the cached value if one exists (same rules as `getCache()`),
+// otherwise from the initial value. Re-subscribes if the event name changes.
 emittify.useEventListener('event-name', initialValue)
 ```
+
+Function payloads are stored as values. They are never called as React state updaters.
 
 #### `getCache()`
 
 ```ts
-// Gets the cached value for event name.
+// Gets the cached value for event name, or `initialValue` if nothing is cached.
 emittify.getCache('event-name', initialValue)
 ```
+
+Cached `0`, `false`, `''` and `null` are returned as-is. A cached `undefined` counts as "no value", so
+`getCache()` returns `initialValue` after `send('event-name', undefined)`.
 
 #### `clearCache()`
 
