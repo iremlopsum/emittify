@@ -12,27 +12,32 @@
   "publishConfig": {
     "access": "public"
   },
+  "type": "module",
   "main": "dist/index.js",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./react": {
-      "import": "./dist/react/index.js",
-      "require": "./dist/react/index.js",
-      "types": "./dist/react/index.d.ts"
-    }
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./mock": {
+      "types": "./mock.d.cts",
+      "default": "./mock.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "setup": "bash scripts/setup.sh",
-    "build": "npx tsc",
+    "build": "tsc",
     "clean:build": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "release": "release-it"
+    "release": "release-it",
+    "test:dist": "node scripts/smoke-dist.mjs"
   },
   "repository": {
     "type": "git",
@@ -68,7 +73,8 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "mock.js"
+    "mock.cjs",
+    "mock.d.cts"
   ],
   "author": "Kristjan Vool",
   "license": "MIT",
@@ -77,7 +83,7 @@
   },
   "homepage": "https://github.com/iremlopsum/emittify#readme",
   "engines": {
-    "node": ">=18.0.0"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "sideEffects": false,
   "release-it": {

@@ -15,7 +15,7 @@
     "src/**/__tests__/**/*.tsx",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "jest.setup.js",
+    "jest.setup.cjs",
     "jest.setup.d.ts"
   ]
 }
