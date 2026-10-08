@@ -118,11 +118,20 @@ describe('React Emitter', () => {
         counter: number
       }
       const emitter = new Emitter<Events>()
-      const mockCallback = jest.fn()
+      const clearSpy = jest.fn()
 
-      // Override the listen method to spy on it
+      // Override the listen method to spy on the returned clearListener
       const originalListen = emitter.listen.bind(emitter)
-      const listenSpy = jest.fn((key, callback) => originalListen(key, callback))
+      const listenSpy = jest.fn((key, callback) => {
+        const listener = originalListen(key, callback)
+        return {
+          ...listener,
+          clearListener: () => {
+            clearSpy()
+            listener.clearListener()
+          },
+        }
+      })
       emitter.listen = listenSpy as any
 
       const TestComponent = () => {
@@ -133,9 +142,7 @@ describe('React Emitter', () => {
       const { unmount } = render(<TestComponent />)
 
       expect(listenSpy).toHaveBeenCalledTimes(1)
-
-      const listener = listenSpy.mock.results[0].value
-      const clearSpy = jest.spyOn(listener, 'clearListener')
+      expect(clearSpy).not.toHaveBeenCalled()
 
       unmount()
 
@@ -432,17 +439,18 @@ describe('React Emitter', () => {
       // Track listener count by intercepting listen and clear
       let listenerCount = 0
       const originalListen = emitter.listen.bind(emitter)
-      const originalClear = emitter.clear.bind(emitter)
 
       emitter.listen = jest.fn((key, callback) => {
         listenerCount++
-        return originalListen(key, callback)
+        const listener = originalListen(key, callback)
+        return {
+          ...listener,
+          clearListener: () => {
+            listenerCount--
+            listener.clearListener()
+          },
+        }
       }) as any
-
-      emitter.clear = jest.fn(id => {
-        listenerCount--
-        return originalClear(id)
-      })
 
       const TestComponent = () => {
         const count = emitter.useEventListener('counter', 0)
@@ -468,17 +476,18 @@ describe('React Emitter', () => {
 
       let listenerCount = 0
       const originalListen = emitter.listen.bind(emitter)
-      const originalClear = emitter.clear.bind(emitter)
 
       emitter.listen = jest.fn((key, callback) => {
         listenerCount++
-        return originalListen(key, callback)
+        const listener = originalListen(key, callback)
+        return {
+          ...listener,
+          clearListener: () => {
+            listenerCount--
+            listener.clearListener()
+          },
+        }
       }) as any
-
-      emitter.clear = jest.fn(id => {
-        listenerCount--
-        return originalClear(id)
-      })
 
       const TestComponent = () => {
         emitter.useEventListener('event-1', 'default')
@@ -736,6 +745,117 @@ describe('React Emitter', () => {
         emitter.send('rating-a', 9)
       })
       expect(screen.getByTestId('rating')).toHaveTextContent('3')
+    })
+  })
+
+  describe('useSyncExternalStore semantics', () => {
+    interface Events {
+      'rating-a': number
+      'rating-b': number
+      cleared: number | undefined
+      settings: { theme: string }
+    }
+
+    it('shows the new key value right after the key changes', () => {
+      const emitter = new Emitter<Events>({ cachedEvents: ['rating-b'] })
+
+      const TestComponent = ({ eventKey }: { eventKey: 'rating-a' | 'rating-b' }) => {
+        const rating = emitter.useEventListener(eventKey, -1)
+        return <div data-testid="rating">{String(rating)}</div>
+      }
+
+      const { rerender } = render(<TestComponent eventKey="rating-a" />)
+
+      act(() => {
+        emitter.send('rating-a', 5)
+      })
+      expect(screen.getByTestId('rating')).toHaveTextContent('5')
+
+      // 'rating-b' has never been sent, so the fallback is shown instead of the stale 'rating-a' value
+      rerender(<TestComponent eventKey="rating-b" />)
+      expect(screen.getByTestId('rating')).toHaveTextContent('-1')
+
+      // A key change behaves like a fresh mount: 'rating-a' is not cached and may have changed while the
+      // component was not subscribed to it, so the fallback is shown rather than the old 5
+      rerender(<TestComponent eventKey="rating-a" />)
+      expect(screen.getByTestId('rating')).toHaveTextContent('-1')
+
+      // A value cached for 'rating-b' while the component was not subscribed to it is picked up
+
+      emitter.send('rating-b', 7)
+      rerender(<TestComponent eventKey="rating-b" />)
+      expect(screen.getByTestId('rating')).toHaveTextContent('7')
+    })
+
+    it('shows the fallback when undefined is sent', () => {
+      const emitter = new Emitter<Events>({ cachedEvents: ['cleared'] })
+
+      const TestComponent = () => {
+        const value = emitter.useEventListener('cleared', 4)
+        return <div data-testid="value">{String(value)}</div>
+      }
+
+      render(<TestComponent />)
+
+      act(() => {
+        emitter.send('cleared', 2)
+      })
+      expect(screen.getByTestId('value')).toHaveTextContent('2')
+
+      act(() => {
+        emitter.send('cleared', undefined)
+      })
+      expect(screen.getByTestId('value')).toHaveTextContent('4')
+    })
+
+    it('sees a cached value sent during the commit phase', () => {
+      const emitter = new Emitter<Events>({ cachedEvents: ['rating-a'] })
+
+      const Reader = () => {
+        const rating = emitter.useEventListener('rating-a', -1)
+        return <div data-testid="rating">{String(rating)}</div>
+      }
+      const Writer = () => {
+        React.useLayoutEffect(() => {
+          emitter.send('rating-a', 3)
+        }, [])
+        return null
+      }
+
+      act(() => {
+        render(
+          <>
+            <Reader />
+            <Writer />
+          </>,
+        )
+      })
+
+      expect(screen.getByTestId('rating')).toHaveTextContent('3')
+    })
+
+    it('accepts an inline object fallback without re-rendering in a loop', () => {
+      const emitter = new Emitter<Events>()
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+      let renders = 0
+
+      const TestComponent = () => {
+        renders++
+        const settings = emitter.useEventListener('settings', { theme: 'light' })
+        return <div data-testid="theme">{settings.theme}</div>
+      }
+
+      render(<TestComponent />)
+
+      act(() => {
+        emitter.send('settings', { theme: 'dark' })
+      })
+
+      expect(screen.getByTestId('theme')).toHaveTextContent('dark')
+      expect(renders).toBeLessThan(5)
+      expect(consoleError).not.toHaveBeenCalled()
+
+      consoleError.mockRestore()
     })
   })
 })
