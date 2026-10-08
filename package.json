@@ -44,7 +44,7 @@
     "url": "git+https://github.com/iremlopsum/emittify.git"
   },
   "peerDependencies": {
-    "react": ">=16.8.0"
+    "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
