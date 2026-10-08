@@ -1403,4 +1403,120 @@ describe('Emitter', () => {
       expect(callback2).not.toHaveBeenCalled()
     })
   })
+
+  describe('Falsy and undefined cached values', () => {
+    interface Events {
+      rating: number
+      enabled: boolean
+      label: string
+      selection: string | null
+      cleared: number | undefined
+    }
+
+    const createEmitter = () =>
+      new Emitter<Events>({ cachedEvents: ['rating', 'enabled', 'label', 'selection', 'cleared'] })
+
+    it.each([
+      ['rating', 0],
+      ['enabled', false],
+      ['label', ''],
+      ['selection', null],
+    ] as const)('listen() replays a cached %s value of %p', (key, value) => {
+      const emitter = createEmitter()
+      const callback = jest.fn()
+
+      emitter.send(key, value as never)
+      emitter.listen(key, callback)
+
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(callback).toHaveBeenCalledWith(value)
+    })
+
+    it('listen() does not replay after send(key, undefined)', () => {
+      const emitter = createEmitter()
+      const callback = jest.fn()
+
+      emitter.send('cleared', 5)
+      emitter.send('cleared', undefined)
+      emitter.listen('cleared', callback)
+
+      expect(callback).not.toHaveBeenCalled()
+    })
+
+    it('send(key, undefined) still reaches live listeners', () => {
+      const emitter = createEmitter()
+      const callback = jest.fn()
+
+      emitter.listen('cleared', callback)
+      emitter.send('cleared', undefined)
+
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(callback).toHaveBeenCalledWith(undefined)
+    })
+
+    it.each([
+      ['rating', 0, 3],
+      ['enabled', false, true],
+      ['label', '', 'fallback'],
+      ['selection', null, 'fallback'],
+    ] as const)('getCache() returns a cached %s value of %p instead of the fallback', (key, value, fallback) => {
+      const emitter = createEmitter()
+
+      emitter.send(key, value as never)
+
+      expect(emitter.getCache(key, fallback as never)).toBe(value)
+    })
+
+    it('getCache() returns the fallback when nothing is cached', () => {
+      const emitter = createEmitter()
+
+      expect(emitter.getCache('cleared', 7)).toBe(7)
+    })
+
+    it('getCache() returns the fallback after send(key, undefined)', () => {
+      const emitter = createEmitter()
+
+      emitter.send('cleared', 5)
+      emitter.send('cleared', undefined)
+
+      expect(emitter.getCache('cleared', 7)).toBe(7)
+    })
+
+    it('getCache() without a fallback returns undefined after send(key, undefined)', () => {
+      const emitter = createEmitter()
+
+      emitter.send('cleared', 5)
+      emitter.send('cleared', undefined)
+
+      expect(emitter.getCache('cleared')).toBeUndefined()
+    })
+
+    it('deduplication emits a repeated 0 only once', () => {
+      const emitter = new Emitter<Events>({
+        deduplicatedEvents: [{ event: 'rating', comparison: 'deep' }],
+      })
+      const callback = jest.fn()
+
+      emitter.listen('rating', callback)
+      emitter.send('rating', 0)
+      emitter.send('rating', 0)
+
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(callback).toHaveBeenCalledWith(0)
+    })
+
+    it('deduplication emits a repeated false only once (shallow)', () => {
+      const emitter = new Emitter<Events>({
+        deduplicatedEvents: [{ event: 'enabled', comparison: 'shallow' }],
+      })
+      const callback = jest.fn()
+
+      emitter.listen('enabled', callback)
+      emitter.send('enabled', false)
+      emitter.send('enabled', false)
+
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(callback).toHaveBeenCalledWith(false)
+    })
+  })
 })
