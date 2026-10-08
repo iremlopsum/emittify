@@ -33,8 +33,12 @@ It supports caching, event deduplication, and has React hooks.
 yarn add @iremlopsum/emittify
 ```
 
-React is an **optional** peer dependency. The core (`@iremlopsum/emittify`) has no React dependency and works in any
-framework or plain JS/TS. You only need `react` (>= 16.8) installed if you import the hooks from `@iremlopsum/emittify/react`.
+- **Zero dependencies.** React is an **optional** peer dependency: the core (`@iremlopsum/emittify`) works in any
+  framework or plain JS/TS. You only need `react` (>= 18) if you import the hooks from `@iremlopsum/emittify/react`.
+- **ESM-only**, for Node `^20.19.0 || >=22.12.0` and any bundler. `require('@iremlopsum/emittify')` also works on those
+  Node versions (via Node's `require(esm)`), and returns the module namespace, so use `.default`.
+
+Upgrading from 1.x? See the [2.0.0 migration notes](./CHANGELOG.md#200).
 
 ## 💻 Usage
 
@@ -79,14 +83,14 @@ emitter.listen('toast-notification', data => {
   const { message, type } = data // All is typed and auto-completed
 
   console.log({ message, type })
-}
+})
 
 // Emit the 'toast-notification' event.
 // All is typed and auto-completed.
 emitter.send('toast-notification', {
   message: 'Hello World',
-  type: 'success'
-}
+  type: 'success',
+})
 
 // Emit the 'direct-message-count' event.
 emitter.send('direct-message-count', 10)
@@ -185,6 +189,17 @@ emitter.send('status', { active: false, count: 5 }) // ✅ Emitted (active chang
 | Arrays                               | `deep`    | Compares array contents              |
 | Large objects (>1000 keys)           | `shallow` | Better performance                   |
 
+#### Treat payloads as immutable
+
+The cache and deduplication keep a reference to the value you send, not a copy. If you mutate an object after sending
+it and send it again, deduplication compares the object with itself and drops the change. Send a new object instead:
+
+```ts
+emitter.send('form-state', { ...state, name: 'New name' }) // ✅ new object
+state.name = 'New name'
+emitter.send('form-state', state) // ❌ same object, dropped as a duplicate
+```
+
 #### Working with Cached Events
 
 Deduplication works seamlessly with caching:
@@ -256,19 +271,36 @@ input.addEventListener('input', () => {
 })
 ```
 
-### 🧪 Testing with Jest
+### 🧪 Mocking in tests
 
-If you don't already have a Jest setup file configured, please add the following to your [Jest configuration file](https://jestjs.io/docs/configuration) and create the new `jest.setup.js` file in project root:
+`@iremlopsum/emittify/mock` exports a class with the same methods as the React emitter, each a spy. By default
+`listen()` returns `{ event, clearListener }`, and `getCache()` / `useEventListener()` return the fallback value.
 
-```js
-setupFiles: ['<rootDir>/jest.setup.js']
-```
-
-You can then add the following line to that setup file to mock the `NativeModule.RNPermissions`:
+**Jest** — in a [setup file](https://jestjs.io/docs/configuration#setupfiles-array):
 
 ```js
 jest.mock('@iremlopsum/emittify', () => require('@iremlopsum/emittify/mock'))
+jest.mock('@iremlopsum/emittify/react', () => require('@iremlopsum/emittify/mock'))
 ```
+
+**Vitest** — spies come from `vi.fn`:
+
+```ts
+import { vi } from 'vitest'
+
+vi.mock('@iremlopsum/emittify/react', async () => {
+  const { default: EmittifyMock } = await import('@iremlopsum/emittify/mock')
+  return {
+    default: class extends EmittifyMock {
+      constructor() {
+        super(vi.fn)
+      }
+    },
+  }
+})
+```
+
+With Vitest `globals: true`, `new EmittifyMock()` picks up the global `vi.fn` on its own.
 
 ### 🪝 Hooks
 
@@ -285,7 +317,7 @@ import Emittify from '@iremlopsum/emittify/react'
 import emitter from '../core/events-core.ts'
 
 const Component = () => {
-  // Can provide second argument as default value if none is sent yet. Will as well return cached value as initial value if an event was previously sent and cached
+  // Returns the cached value if one exists, otherwise the fallback (second argument), and re-renders on every send
   const count = emitter.useEventListener('direct-message-count', 0)
 
   return <button onClick={() => emitter.send('direct-message-count', 100)}>{count}</button>
@@ -308,10 +340,15 @@ emittify.send('event-name', value)
 const listener = emittify.listen('event-name', callback)
 
 // Listener is an object.
-listener.id // Unique id for the listener
 listener.event // Name of the event
 listener.clearListener() // Clears the listener
 ```
+
+The same callback can be registered more than once; each registration is cleared on its own. A listener added while
+an event is being sent only receives later sends, and a listener cleared during a send is not called.
+
+If a listener throws, the other listeners still run and `send()` does not throw. The error is re-thrown asynchronously
+(in a microtask), so it still reaches `window.onerror`, Node's `uncaughtException` and error trackers such as Sentry.
 
 If the event is in `cachedEvents` and has a cached value, the callback is called immediately with that value.
 Falsy values such as `0`, `false`, `''` and `null` are replayed like any other value. A cached `undefined` is treated as
@@ -321,12 +358,14 @@ receive every `send()`, including `undefined`.
 #### `useEventListener()`
 
 ```ts
-// Subscribes to the event and returns its latest value. Starts from the cached value if one exists (same rules as `getCache()`),
-// otherwise from the initial value. Re-subscribes if the event name changes.
+// Subscribes to the event and returns its latest value, or `initialValue` when nothing (or `undefined`) has been
+// received. Starts from the cached value if one exists (same rules as `getCache()`).
 emittify.useEventListener('event-name', initialValue)
 ```
 
-Function payloads are stored as values. They are never called as React state updaters.
+Built on `useSyncExternalStore`, so it is safe under concurrent rendering. Changing the event name behaves like a
+fresh mount: it shows the new event's cached value or `initialValue`, never the previous event's value. Function
+payloads are returned as values. Without `initialValue` the return type includes `undefined`.
 
 #### `getCache()`
 
@@ -336,7 +375,8 @@ emittify.getCache('event-name', initialValue)
 ```
 
 Cached `0`, `false`, `''` and `null` are returned as-is. A cached `undefined` counts as "no value", so
-`getCache()` returns `initialValue` after `send('event-name', undefined)`.
+`getCache()` returns `initialValue` after `send('event-name', undefined)`. Without `initialValue` the return type
+includes `undefined`.
 
 #### `clearCache()`
 
@@ -352,11 +392,11 @@ emittify.clearCache('event-name')
 emittify.clearAllCache()
 ```
 
-#### `clear()`
+#### `clearAll()`
 
 ```ts
-// Clears listeners for given listener id.
-emittify.clear('listener-id')
+// Removes all listeners, cached values and deduplication state. The options passed to the constructor are kept.
+emittify.clearAll()
 ```
 
 #### `clearDeduplicationCache()`
@@ -431,14 +471,23 @@ yarn test:coverage
 # Build the project
 yarn build
 
+# Load the built package in plain Node (run after build)
+yarn test:dist
+
+# Check the bundle size budget (run after build)
+yarn size
+
+# Lint the published package shape (publint, arethetypeswrong)
+yarn lint:package
+
 # Clean build artifacts
 yarn clean:build
 ```
 
 ## 💖 Code of Conduct
 
-This library has adopted a Code of Conduct that we expect project participants to adhere to. Please read the [full text](https://github.com/colorfy-software/localify/blob/master/CODE_OF_CONDUCT.md) so that you can understand what actions will and will not be tolerated.
+This library has adopted a Code of Conduct that we expect project participants to adhere to. Please read the [full text](./CODE_OF_CONDUCT.md) so that you can understand what actions will and will not be tolerated.
 
 ## 📰 License
 
-localify is licensed under the [MIT License](https://github.com/colorfy-software/localify/blob/master/LICENSE).
+Emittify is licensed under the [MIT License](./LICENSE).

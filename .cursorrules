@@ -7,8 +7,8 @@ Emittify is a tiny TypeScript event emitter library with first-class TypeScript 
 - **Language**: TypeScript 5.9+
 - **Build**: TypeScript Compiler (tsc)
 - **Testing**: Jest with ts-jest, @testing-library/react
-- **Runtime**: Node.js (library), React 19+ (hooks)
-- **Dependencies**: fast-deep-equal (deep comparison)
+- **Runtime**: Node.js ^20.19.0 || >=22.12.0, ESM-only (library), React 18+ (hooks)
+- **Dependencies**: none (deep comparison is inlined in `src/index.ts`)
 
 ## Code Style & Conventions
 
