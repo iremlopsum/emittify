@@ -10,6 +10,16 @@ describe('EmittifyMock', () => {
     EmittifyMock = require('../../mock.cjs').default
   })
 
+  describe('Module shape', () => {
+    it('exports the class as module.exports and as default', () => {
+      const exported = require('../../mock.cjs')
+
+      expect(typeof exported).toBe('function')
+      expect(exported.default).toBe(exported)
+      expect(exported.__esModule).toBe(true)
+    })
+  })
+
   describe('Mock Module Structure', () => {
     it('should export a class', () => {
       expect(EmittifyMock).toBeDefined()
@@ -42,11 +52,6 @@ describe('EmittifyMock', () => {
     it('should have getCache method as jest.fn()', () => {
       expect(mockInstance.getCache).toBeDefined()
       expect(jest.isMockFunction(mockInstance.getCache)).toBe(true)
-    })
-
-    it('should have clear method as jest.fn()', () => {
-      expect(mockInstance.clear).toBeDefined()
-      expect(jest.isMockFunction(mockInstance.clear)).toBe(true)
     })
 
     it('should have clearAll method as jest.fn()', () => {
@@ -92,13 +97,6 @@ describe('EmittifyMock', () => {
 
       expect(mockInstance.getCache).toHaveBeenCalledTimes(1)
       expect(mockInstance.getCache).toHaveBeenCalledWith('test-event', 'fallback')
-    })
-
-    it('should track calls to clear()', () => {
-      mockInstance.clear('listener-id')
-
-      expect(mockInstance.clear).toHaveBeenCalledTimes(1)
-      expect(mockInstance.clear).toHaveBeenCalledWith('listener-id')
     })
 
     it('should track calls to clearAll()', () => {
@@ -223,14 +221,44 @@ describe('EmittifyMock', () => {
   })
 
   describe('API Compatibility', () => {
-    it('should match the real Emitter API surface', () => {
-      const mockInstance = new EmittifyMock()
-      const expectedMethods = ['send', 'listen', 'getCache', 'clear', 'clearAll', 'clearCache', 'clearAllCache']
+    it('should have exactly the methods of the real React emitter', () => {
+      const ReactEmitter = require('../react/index').default
+      const methodsOf = instance =>
+        Object.keys(instance)
+          .filter(key => typeof instance[key] === 'function')
+          .sort()
 
-      expectedMethods.forEach(method => {
-        expect(mockInstance[method]).toBeDefined()
-        expect(typeof mockInstance[method]).toBe('function')
-      })
+      expect(methodsOf(new EmittifyMock())).toEqual(methodsOf(new ReactEmitter()))
+    })
+  })
+
+  describe('Default behaviour', () => {
+    it('listen() returns a listener whose clearListener can be called', () => {
+      const mockInstance = new EmittifyMock()
+      const listener = mockInstance.listen('test-event', jest.fn())
+
+      expect(listener.event).toBe('test-event')
+      expect(() => listener.clearListener()).not.toThrow()
+      expect(jest.isMockFunction(listener.clearListener)).toBe(true)
+    })
+
+    it('getCache() returns the fallback value', () => {
+      expect(new EmittifyMock().getCache('test-event', 'fallback')).toBe('fallback')
+    })
+
+    it('useEventListener() returns the fallback value', () => {
+      const mockInstance = new EmittifyMock()
+
+      expect(mockInstance.useEventListener('test-event', 'fallback')).toBe('fallback')
+      expect(jest.isMockFunction(mockInstance.useEventListener)).toBe(true)
+    })
+
+    it('uses a given spy factory, e.g. vi.fn in Vitest', () => {
+      const createSpy = jest.fn(implementation => jest.fn(implementation))
+      const mockInstance = new EmittifyMock(createSpy)
+
+      expect(createSpy).toHaveBeenCalled()
+      expect(mockInstance.getCache('test-event', 'fallback')).toBe('fallback')
     })
   })
 })
