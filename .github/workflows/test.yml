@@ -25,7 +25,7 @@ jobs:
           cache: 'yarn'
       
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --ignore-engines # release-it (dev-only) requires Node >= 20.12
       
       - name: Run tests
         run: yarn test
