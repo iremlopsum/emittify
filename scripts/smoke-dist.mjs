@@ -20,5 +20,6 @@ assert.equal(new required.default().constructor, Emittify, 'require(): core entr
 const EmittifyMock = require('@iremlopsum/emittify/mock').default
 const mock = new EmittifyMock(() => () => undefined)
 assert.equal(typeof mock.send, 'function', 'require(): mock entry')
+assert.throws(() => new EmittifyMock(), /no spy factory found/, 'mock: helpful error without jest/vi')
 
 console.log(`dist smoke test passed on Node ${process.version}`)
