@@ -602,4 +602,140 @@ describe('React Emitter', () => {
       expect(screen.getByTestId('value-2')).toHaveTextContent('value-2')
     })
   })
+
+  describe('Falsy, undefined and function values', () => {
+    interface Events {
+      rating: number
+      cleared: number | undefined
+      formatter: (value: number) => string
+      'rating-a': number
+      'rating-b': number
+    }
+
+    it('starts from a cached 0 instead of the fallback', () => {
+      const emitter = new Emitter<Events>({ cachedEvents: ['rating'] })
+
+      emitter.send('rating', 0)
+
+      const TestComponent = () => {
+        const rating = emitter.useEventListener('rating', 4)
+        return <div data-testid="rating">{String(rating)}</div>
+      }
+
+      render(<TestComponent />)
+
+      expect(screen.getByTestId('rating')).toHaveTextContent('0')
+    })
+
+    it('uses the fallback when nothing is cached', () => {
+      const emitter = new Emitter<Events>({ cachedEvents: ['cleared'] })
+
+      const TestComponent = () => {
+        const value = emitter.useEventListener('cleared', 4)
+        return <div data-testid="value">{String(value)}</div>
+      }
+
+      render(<TestComponent />)
+
+      expect(screen.getByTestId('value')).toHaveTextContent('4')
+    })
+
+    it('uses the fallback when the cached value is undefined', () => {
+      const emitter = new Emitter<Events>({ cachedEvents: ['cleared'] })
+
+      emitter.send('cleared', 2)
+      emitter.send('cleared', undefined)
+
+      const TestComponent = () => {
+        const value = emitter.useEventListener('cleared', 4)
+        return <div data-testid="value">{String(value)}</div>
+      }
+
+      render(<TestComponent />)
+
+      expect(screen.getByTestId('value')).toHaveTextContent('4')
+    })
+
+    it('follows later sends, including 0', () => {
+      const emitter = new Emitter<Events>({ cachedEvents: ['rating'] })
+
+      const TestComponent = () => {
+        const rating = emitter.useEventListener('rating', 4)
+        return <div data-testid="rating">{String(rating)}</div>
+      }
+
+      render(<TestComponent />)
+
+      act(() => {
+        emitter.send('rating', 2)
+      })
+      expect(screen.getByTestId('rating')).toHaveTextContent('2')
+
+      act(() => {
+        emitter.send('rating', 0)
+      })
+      expect(screen.getByTestId('rating')).toHaveTextContent('0')
+    })
+
+    it('stores a function payload as a value instead of calling it', () => {
+      const emitter = new Emitter<Events>()
+      const formatter = jest.fn((value: number) => `${value} stars`)
+      let received: Events['formatter'] | undefined
+
+      const TestComponent = () => {
+        received = emitter.useEventListener('formatter')
+        return null
+      }
+
+      render(<TestComponent />)
+
+      act(() => {
+        emitter.send('formatter', formatter)
+      })
+
+      expect(formatter).not.toHaveBeenCalled()
+      expect(received).toBe(formatter)
+    })
+
+    it('starts from a cached function payload without calling it', () => {
+      const emitter = new Emitter<Events>({ cachedEvents: ['formatter'] })
+      const formatter = jest.fn((value: number) => `${value} stars`)
+      let received: Events['formatter'] | undefined
+
+      emitter.send('formatter', formatter)
+
+      const TestComponent = () => {
+        received = emitter.useEventListener('formatter')
+        return null
+      }
+
+      render(<TestComponent />)
+
+      expect(formatter).not.toHaveBeenCalled()
+      expect(received).toBe(formatter)
+    })
+
+    it('re-subscribes when key changes', () => {
+      const emitter = new Emitter<Events>()
+
+      const TestComponent = ({ eventKey }: { eventKey: 'rating-a' | 'rating-b' }) => {
+        const rating = emitter.useEventListener(eventKey, -1)
+        return <div data-testid="rating">{String(rating)}</div>
+      }
+
+      const { rerender } = render(<TestComponent eventKey="rating-a" />)
+
+      rerender(<TestComponent eventKey="rating-b" />)
+
+      act(() => {
+        emitter.send('rating-b', 3)
+      })
+      expect(screen.getByTestId('rating')).toHaveTextContent('3')
+
+      act(() => {
+        emitter.send('rating-a', 9)
+      })
+      expect(screen.getByTestId('rating')).toHaveTextContent('3')
+    })
+  })
 })
