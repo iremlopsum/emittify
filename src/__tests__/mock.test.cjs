@@ -253,6 +253,13 @@ describe('EmittifyMock', () => {
       expect(jest.isMockFunction(mockInstance.useEventListener)).toBe(true)
     })
 
+    it('accepts the real emitter options in place of a spy factory', () => {
+      // Code under test calls `new Emittify(options)`, which reaches the mock's constructor
+      const mockInstance = new EmittifyMock({ cachedEvents: ['test-event'] })
+
+      expect(jest.isMockFunction(mockInstance.send)).toBe(true)
+    })
+
     it('uses a given spy factory, e.g. vi.fn in Vitest', () => {
       const createSpy = jest.fn(implementation => jest.fn(implementation))
       const mockInstance = new EmittifyMock(createSpy)
