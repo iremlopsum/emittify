@@ -7,7 +7,7 @@ describe('EmittifyMock', () => {
 
   beforeEach(() => {
     jest.resetModules()
-    EmittifyMock = require('../../mock.js').default
+    EmittifyMock = require('../../mock.cjs').default
   })
 
   describe('Mock Module Structure', () => {
@@ -168,7 +168,7 @@ describe('EmittifyMock', () => {
     it('should be usable as a mock in tests', () => {
       // This demonstrates how the mock would be used in actual tests
       // In real usage, users would do: jest.mock('@iremlopsum/emittify', () => require('@iremlopsum/emittify/mock'))
-      const EmittifyMock = require('../../mock.js').default
+      const EmittifyMock = require('../../mock.cjs').default
       const instance = new EmittifyMock()
 
       expect(instance.send).toBeDefined()

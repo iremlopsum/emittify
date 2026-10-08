@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import BaseEmitter from '../index'
+import BaseEmitter from '../index.js'
 
 class Emitter<
   EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>,
