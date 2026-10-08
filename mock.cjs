@@ -6,7 +6,15 @@
  */
 class EmittifyMock {
   constructor(createSpy) {
-    const fn = createSpy || (typeof jest !== 'undefined' ? jest.fn : typeof vi !== 'undefined' ? vi.fn : undefined)
+    // Code under test calls `new Emittify(options)`, so only a function argument is a spy factory
+    const fn =
+      typeof createSpy === 'function'
+        ? createSpy
+        : typeof jest !== 'undefined'
+          ? jest.fn
+          : typeof vi !== 'undefined'
+            ? vi.fn
+            : undefined
 
     if (typeof fn !== 'function') {
       throw new Error('EmittifyMock: no spy factory found. Pass one, e.g. new EmittifyMock(vi.fn)')
