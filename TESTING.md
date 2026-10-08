@@ -233,7 +233,7 @@ Tests run automatically on:
 
 ```yaml
 # .github/workflows/test.yml
-- Test on Node 18.x and 20.x
+- Test on Node 20.x, 22.x and 24.x
 - Run full test suite
 - Generate coverage report
 - Upload coverage to Codecov
