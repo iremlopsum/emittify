@@ -2,38 +2,44 @@ name: Test
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   test:
     name: Test on Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
-    
+
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18.x, 20.x]
-    
+        # Supported range: ^20.19.0 || >=22.12.0
+        node-version: [20.x, 22.x, 24.x]
+
     steps:
-      - uses: actions/checkout@v3
-      
+      - uses: actions/checkout@v4
+
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-      
+
       - name: Install dependencies
-        run: yarn install --frozen-lockfile --ignore-engines # release-it (dev-only) requires Node >= 20.12
-      
-      - name: Run tests
-        run: yarn test
-      
+        run: yarn install --frozen-lockfile
+
       - name: Run tests with coverage
         run: yarn test:coverage
-      
+
+      - name: Build
+        run: yarn build
+
+      - name: Load the built package in plain Node
+        run: yarn test:dist
+
       - name: Upload coverage to Codecov
+        if: matrix.node-version == '22.x'
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage/coverage-final.json
@@ -41,29 +47,27 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
 
-  build:
-    name: Build
+  package:
+    name: Package checks
     runs-on: ubuntu-latest
-    
+
     steps:
-      - uses: actions/checkout@v3
-      
+      - uses: actions/checkout@v4
+
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           cache: 'yarn'
-      
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-      
+
       - name: Build
         run: yarn build
-      
-      - name: Check build output
-        run: |
-          if [ ! -d "dist" ]; then
-            echo "Build failed: dist directory not found"
-            exit 1
-          fi
 
+      - name: Size budget
+        run: yarn size
+
+      - name: Lint package (publint, arethetypeswrong)
+        run: yarn lint:package
