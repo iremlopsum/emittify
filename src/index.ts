@@ -1,8 +1,8 @@
-import fastDeepEqual from 'fast-deep-equal'
+export type Comparison = 'deep' | 'shallow'
 
 export interface DeduplicationConfig<K> {
   event: K
-  comparison: 'deep' | 'shallow'
+  comparison: Comparison
 }
 
 export interface OptionsType<EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>> {
@@ -10,198 +10,195 @@ export interface OptionsType<EventsType extends Record<keyof EventsType, EventsT
   deduplicatedEvents?: DeduplicationConfig<keyof EventsType>[]
 }
 
+export interface Listener<K> {
+  event: K
+  clearListener: () => void
+}
+
+type Callback = (params: any) => void
+
+const hasOwn = (object: object, key: PropertyKey) => Object.prototype.hasOwnProperty.call(object, key)
+
+/**
+ * Only checks first level properties, not nested objects
+ */
+const shallowEqual = (a: any, b: any): boolean => {
+  if (a === b) return true
+  if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false
+
+  const keys = Object.keys(a)
+
+  return keys.length === Object.keys(b).length && keys.every(key => hasOwn(b, key) && a[key] === b[key])
+}
+
+/**
+ * Structural equality for plain objects, arrays, Maps, Sets, Dates and RegExps. NaN equals NaN, and objects
+ * with a custom valueOf/toString (Date, URL, ...) are compared by its result, as in fast-deep-equal.
+ */
+const deepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true
+  if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return a !== a && b !== b
+  if (a.constructor !== b.constructor) return false
+
+  if (Array.isArray(a)) return a.length === b.length && a.every((value, i) => deepEqual(value, b[i]))
+
+  if (a instanceof Map) {
+    if (a.size !== b.size) return false
+    for (const [key, value] of a) if (!b.has(key) || !deepEqual(value, b.get(key))) return false
+    return true
+  }
+
+  if (a instanceof Set) {
+    if (a.size !== b.size) return false
+    for (const value of a) if (!b.has(value)) return false
+    return true
+  }
+
+  if (a instanceof RegExp) return a.source === b.source && a.flags === b.flags
+
+  // Class instances such as Date or URL: compare by a meaningful valueOf/toString. Checks the returned values
+  // rather than the functions, so it also works for objects from another realm (iframes, jsdom).
+  const proto = Object.getPrototypeOf(a)
+
+  if (proto && proto !== Object.prototype) {
+    const value = a.valueOf?.()
+    if (value !== a) return value === b.valueOf()
+
+    const string = a.toString?.()
+    if (typeof string === 'string' && !string.startsWith('[object ')) return string === b.toString()
+  }
+
+  const keys = Object.keys(a)
+
+  return keys.length === Object.keys(b).length && keys.every(key => hasOwn(b, key) && deepEqual(a[key], b[key]))
+}
+
 class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof EventsType]>> {
   /**
-   * Map that holds all registered receiver ids per event type. The ids are kept in a Set.
-   * This allows to loop over all listeners per event, and send out the message
-   *
-   * @example { 'messages.incoming': ['0.wfuyeh', '0.kjhsadf8'] }
+   * Active callbacks per event. Each registration gets its own entry, so the same function can be registered
+   * more than once and each registration is cleared independently.
    */
-  private receivers: Map<keyof EventsType, Set<string>> = new Map()
-  /**
-   * Map of all listeners where key is id of the listener and value is an object with callback, id and event name
-   *
-   * @example { '0.wfuyeh': { callback: (params) => {}, id: '0.wfuyeh', event: 'messages.incoming' } }
-   */
-  private listeners = new Map<
-    string,
-    { id: string; event: keyof EventsType; callback: (params: EventsType[keyof EventsType]) => void }
-  >()
+  private listeners = new Map<keyof EventsType, Set<{ callback: Callback }>>()
 
-  private cachedMessages = new Map<keyof EventsType, EventsType[keyof EventsType]>()
+  private cachedEvents: Set<keyof EventsType>
+
+  private cachedMessages = new Map<keyof EventsType, unknown>()
 
   /**
-   * Map that stores previous values for deduplicated events
-   * Used to compare current value against previous to prevent redundant emissions
+   * Previous values for deduplicated events, compared against the next send to skip redundant emissions
    */
-  private previousValues = new Map<keyof EventsType, EventsType[keyof EventsType]>()
+  private previousValues = new Map<keyof EventsType, unknown>()
 
-  /**
-   * Map that stores deduplication config per event (deep or shallow comparison)
-   */
-  private deduplicationConfig = new Map<keyof EventsType, 'deep' | 'shallow'>()
+  private deduplicationConfig: Map<keyof EventsType, Comparison>
 
-  constructor(private options?: OptionsType<EventsType>) {
-    this.options = options || {}
-
-    // Initialize deduplication config map
-    if (this.options.deduplicatedEvents) {
-      this.options.deduplicatedEvents.forEach(config => {
-        this.deduplicationConfig.set(config.event, config.comparison)
-      })
-    }
+  constructor(options: OptionsType<EventsType> = {}) {
+    this.cachedEvents = new Set(options.cachedEvents)
+    this.deduplicationConfig = new Map(options.deduplicatedEvents?.map(config => [config.event, config.comparison]))
   }
 
-  /**
-   * Performs shallow equality comparison between two values
-   * Only checks first level properties, not nested objects
-   */
-  private shallowEqual = (a: any, b: any): boolean => {
-    if (a === b) return true
+  send = <K extends keyof EventsType>(key: K, params: EventsType[K]): void => {
+    const comparison = this.deduplicationConfig.get(key)
 
-    if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
-      return false
+    if (this.cachedEvents.has(key)) {
+      this.cachedMessages.set(key, params)
     }
 
-    const keysA = Object.keys(a)
-    const keysB = Object.keys(b)
+    if (comparison) {
+      const isDuplicate =
+        this.previousValues.has(key) &&
+        (comparison === 'deep' ? deepEqual : shallowEqual)(this.previousValues.get(key), params)
 
-    if (keysA.length !== keysB.length) return false
+      if (isDuplicate) return
 
-    return keysA.every(key => a[key] === b[key])
-  }
-
-  /**
-   * Checks if two values are equal based on comparison strategy
-   */
-  private areValuesEqual = (a: any, b: any, comparison: 'deep' | 'shallow'): boolean => {
-    return comparison === 'deep' ? fastDeepEqual(a, b) : this.shallowEqual(a, b)
-  }
-
-  send = <K extends keyof EventsType>(key: K, params: EventsType[K]) => {
-    // Check if this event should be deduplicated
-    const comparisonType = this.deduplicationConfig.get(key)
-
-    if (comparisonType) {
-      // If we have a previous value, compare it with the current one
-      if (this.previousValues.has(key)) {
-        const previousValue = this.previousValues.get(key)
-
-        // If values are equal, skip emission
-        if (this.areValuesEqual(previousValue, params, comparisonType)) {
-          // Still update cache if needed (cache should reflect latest attempt)
-          if (this.options?.cachedEvents?.includes(key)) {
-            this.cachedMessages.set(key, params)
-          }
-          return
-        }
-      }
-
-      // Store current value as previous for next comparison
       this.previousValues.set(key, params)
     }
 
-    const receivers = this.receivers.get(key)
+    const subscriptions = this.listeners.get(key)
 
-    if (receivers) {
-      receivers.forEach(receiverId => {
-        const listener = this.listeners.get(receiverId)
+    if (!subscriptions) return
 
-        if (listener) {
-          listener.callback(params)
-        }
-      })
-    }
+    // Iterate a snapshot so listeners added during this emit only receive later emits,
+    // and skip listeners removed during this emit
+    for (const subscription of [...subscriptions]) {
+      if (!subscriptions.has(subscription)) continue
 
-    if (this.options?.cachedEvents?.includes(key)) {
-      this.cachedMessages.set(key, params)
-    }
-  }
-
-  listen = <K extends keyof EventsType>(
-    key: K,
-    callback: (params: EventsType[K]) => void,
-  ): {
-    id: string
-    event: K
-    clearListener: () => void
-  } => {
-    const id = Math.random().toString(16)
-    const receivers = this.receivers.get(key)
-
-    // A cached `undefined` means "cleared", so it is not replayed. Other falsy values (0, false, '', null) are.
-    if (this.options?.cachedEvents?.includes(key)) {
-      const values = this.cachedMessages.get(key) as EventsType[K]
-
-      if (values !== undefined) {
-        callback(values)
+      try {
+        subscription.callback(params)
+      } catch (error) {
+        // One failing listener must not stop the others. Re-throw asynchronously so the error still
+        // reaches global error handlers (window.onerror, process 'uncaughtException', error trackers)
+        queueMicrotask(() => {
+          throw error
+        })
       }
     }
+  }
 
-    if (receivers) {
-      receivers.add(id)
-    } else {
-      this.receivers.set(key, new Set<string>().add(id))
+  listen = <K extends keyof EventsType>(key: K, callback: (params: EventsType[K]) => void): Listener<K> => {
+    // A cached `undefined` means "cleared", so it is not replayed. Other falsy values (0, false, '', null) are.
+    const cached = this.cachedMessages.get(key) as EventsType[K] | undefined
+
+    if (cached !== undefined) {
+      callback(cached)
     }
 
-    this.listeners.set(id, {
-      id,
-      event: key,
-      callback: callback as (params: EventsType[keyof EventsType]) => void,
-    })
+    const subscription = { callback }
+    const subscriptions = this.listeners.get(key) ?? new Set()
+
+    subscriptions.add(subscription)
+    this.listeners.set(key, subscriptions)
 
     return {
-      id,
       event: key,
-      clearListener: () => this.clear(id),
+      clearListener: () => {
+        subscriptions.delete(subscription)
+
+        // Drop the empty set so dynamic event names don't accumulate. Only if it is still the active set,
+        // since clearAll() may have replaced it.
+        if (!subscriptions.size && this.listeners.get(key) === subscriptions) {
+          this.listeners.delete(key)
+        }
+      },
     }
   }
 
-  getCache = <K extends keyof EventsType, V extends EventsType[K]>(
-    key: K,
-    fallbackValue?: V,
-  ): V extends undefined ? EventsType[K] : V => {
-    // A cached `undefined` means "cleared", so the fallback is used instead
-    const cached = this.cachedMessages.get(key)
+  /**
+   * Returns the cached value, or `fallbackValue` when nothing (or `undefined`) is cached
+   */
+  getCache: {
+    <K extends keyof EventsType>(key: K): EventsType[K] | undefined
+    <K extends keyof EventsType>(key: K, fallbackValue: EventsType[K]): EventsType[K]
+  } = <K extends keyof EventsType>(key: K, fallbackValue?: EventsType[K]) => {
+    const cached = this.cachedMessages.get(key) as EventsType[K] | undefined
 
+    // Overload signatures above give callers the precise type; the implementation returns either branch
     return (cached === undefined ? fallbackValue : cached) as EventsType[K]
   }
 
-  clear = (id: string) => {
-    const listener = this.listeners.get(id)
-
-    if (listener) {
-      const receivers = this.receivers.get(listener.event)
-
-      if (receivers) {
-        receivers.delete(id)
-        this.listeners.delete(id)
-      }
-    }
-
-    return undefined
+  /**
+   * Removes all listeners, cached values and deduplication state. Options are kept.
+   */
+  clearAll = (): void => {
+    // Empty each set as well, so an emit that is in progress stops reaching the removed listeners
+    this.listeners.forEach(subscriptions => subscriptions.clear())
+    this.listeners.clear()
+    this.cachedMessages.clear()
+    this.previousValues.clear()
   }
 
-  clearAll = () => {
-    this.receivers = new Map()
-    this.listeners = new Map()
-
-    return this.listeners
-  }
-
-  clearCache = <K extends keyof EventsType>(key: K) => {
+  clearCache = <K extends keyof EventsType>(key: K): void => {
     this.cachedMessages.delete(key)
   }
 
-  clearAllCache = () => {
-    this.cachedMessages = new Map()
+  clearAllCache = (): void => {
+    this.cachedMessages.clear()
   }
 
   /**
    * Clears the previous value for a specific deduplicated event
    * Next send will always emit since there's no previous value to compare
    */
-  clearDeduplicationCache = <K extends keyof EventsType>(key: K) => {
+  clearDeduplicationCache = <K extends keyof EventsType>(key: K): void => {
     this.previousValues.delete(key)
   }
 
@@ -209,8 +206,8 @@ class Emitter<EventsType extends Record<keyof EventsType, EventsType[keyof Event
    * Clears all previous values for deduplicated events
    * Next sends will always emit since there are no previous values to compare
    */
-  clearAllDeduplicationCache = () => {
-    this.previousValues = new Map()
+  clearAllDeduplicationCache = (): void => {
+    this.previousValues.clear()
   }
 }
 

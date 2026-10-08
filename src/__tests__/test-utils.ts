@@ -126,7 +126,7 @@ export function testCacheBehavior<
   emitter.send(eventKey, value)
 
   // Should return cached value
-  expect(emitter.getCache(eventKey, fallbackValue)).toEqual(value)
+  expect(emitter.getCache(eventKey)).toEqual(value)
 
   // Clear cache
   emitter.clearCache(eventKey)
@@ -152,11 +152,9 @@ export function testListenerLifecycle<
   const listener = emitter.listen(eventKey, callback)
 
   // Verify listener object
-  expect(listener).toHaveProperty('id')
   expect(listener).toHaveProperty('event')
   expect(listener).toHaveProperty('clearListener')
   expect(listener.event).toBe(eventKey)
-  expect(typeof listener.id).toBe('string')
   expect(typeof listener.clearListener).toBe('function')
 
   // Test callback is called
@@ -201,12 +199,6 @@ export const testDataGenerators = {
 /**
  * Type guard to check if a value is a listener object
  */
-export function isListener<T>(value: any): value is { id: string; event: T; clearListener: () => void } {
-  return (
-    value &&
-    typeof value === 'object' &&
-    typeof value.id === 'string' &&
-    typeof value.clearListener === 'function' &&
-    'event' in value
-  )
+export function isListener<T>(value: any): value is { event: T; clearListener: () => void } {
+  return value && typeof value === 'object' && typeof value.clearListener === 'function' && 'event' in value
 }

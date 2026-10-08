@@ -159,13 +159,12 @@ describe('Emitter', () => {
 
       const listener = emitter.listen('test-event', callback)
 
-      expect(listener).toHaveProperty('id')
       expect(listener).toHaveProperty('event')
       expect(listener).toHaveProperty('clearListener')
       expect(listener.event).toBe('test-event')
     })
 
-    it('should return object with id, event, and clearListener', () => {
+    it('should return only event and clearListener', () => {
       interface Events {
         'test-event': string
       }
@@ -174,12 +173,26 @@ describe('Emitter', () => {
 
       const listener = emitter.listen('test-event', callback)
 
-      expect(typeof listener.id).toBe('string')
+      expect(Object.keys(listener).sort()).toEqual(['clearListener', 'event'])
       expect(listener.event).toBe('test-event')
       expect(typeof listener.clearListener).toBe('function')
     })
 
-    it('should generate unique ID for each listener', () => {
+    it('should call the same callback once per registration', () => {
+      interface Events {
+        'test-event': string
+      }
+      const emitter = new Emitter<Events>()
+      const callback = jest.fn()
+
+      emitter.listen('test-event', callback)
+      emitter.listen('test-event', callback)
+      emitter.send('test-event', 'test')
+
+      expect(callback).toHaveBeenCalledTimes(2)
+    })
+
+    it('should keep other registrations of the same callback when one is cleared', () => {
       interface Events {
         'test-event': string
       }
@@ -187,12 +200,11 @@ describe('Emitter', () => {
       const callback = jest.fn()
 
       const listener1 = emitter.listen('test-event', callback)
-      const listener2 = emitter.listen('test-event', callback)
-      const listener3 = emitter.listen('test-event', callback)
+      emitter.listen('test-event', callback)
+      listener1.clearListener()
+      emitter.send('test-event', 'test')
 
-      expect(listener1.id).not.toBe(listener2.id)
-      expect(listener2.id).not.toBe(listener3.id)
-      expect(listener1.id).not.toBe(listener3.id)
+      expect(callback).toHaveBeenCalledTimes(1)
     })
 
     it('should allow multiple listeners for same event', () => {
@@ -358,8 +370,8 @@ describe('Emitter', () => {
     })
   })
 
-  describe('clear()', () => {
-    it('should remove listener by ID', () => {
+  describe('clearListener()', () => {
+    it('should remove the listener', () => {
       interface Events {
         'test-event': string
       }
@@ -367,13 +379,13 @@ describe('Emitter', () => {
       const callback = jest.fn()
 
       const listener = emitter.listen('test-event', callback)
-      emitter.clear(listener.id)
+      listener.clearListener()
       emitter.send('test-event', 'test')
 
       expect(callback).not.toHaveBeenCalled()
     })
 
-    it('should return undefined after clearing', () => {
+    it('should be safe to call more than once', () => {
       interface Events {
         'test-event': string
       }
@@ -381,34 +393,11 @@ describe('Emitter', () => {
       const callback = jest.fn()
 
       const listener = emitter.listen('test-event', callback)
-      const result = emitter.clear(listener.id)
+      emitter.listen('test-event', callback)
 
-      expect(result).toBeUndefined()
-    })
-
-    it('should handle clearing non-existent listener ID', () => {
-      interface Events {
-        'test-event': string
-      }
-      const emitter = new Emitter<Events>()
-
-      expect(() => {
-        emitter.clear('non-existent-id')
-      }).not.toThrow()
-    })
-
-    it('should remove listener from both receivers and listeners maps', () => {
-      interface Events {
-        'test-event': string
-      }
-      const emitter = new Emitter<Events>()
-      const callback = jest.fn()
-
-      const listener = emitter.listen('test-event', callback)
-      emitter.send('test-event', 'test-1')
-
-      emitter.clear(listener.id)
-      emitter.send('test-event', 'test-2')
+      listener.clearListener()
+      listener.clearListener()
+      emitter.send('test-event', 'test')
 
       expect(callback).toHaveBeenCalledTimes(1)
     })
@@ -426,7 +415,7 @@ describe('Emitter', () => {
       emitter.listen('test-event', callback2)
       emitter.listen('test-event', callback3)
 
-      emitter.clear(listener1.id)
+      listener1.clearListener()
       emitter.send('test-event', 'test')
 
       expect(callback1).not.toHaveBeenCalled()
@@ -446,12 +435,26 @@ describe('Emitter', () => {
       const listener1 = emitter.listen('event-1', callback1)
       emitter.listen('event-2', callback2)
 
-      emitter.clear(listener1.id)
+      listener1.clearListener()
       emitter.send('event-1', 'test-1')
       emitter.send('event-2', 'test-2')
 
       expect(callback1).not.toHaveBeenCalled()
       expect(callback2).toHaveBeenCalledWith('test-2')
+    })
+
+    it('should drop the event bookkeeping once its last listener is cleared', () => {
+      interface Events {
+        [key: `room-${number}`]: string
+      }
+      const emitter = new Emitter<Events>()
+
+      for (let i = 0; i < 100; i++) {
+        emitter.listen(`room-${i}`, jest.fn()).clearListener()
+      }
+
+      // Internal check: dynamic event names must not leave empty listener sets behind
+      expect((emitter as unknown as { listeners: Map<unknown, unknown> }).listeners.size).toBe(0)
     })
   })
 
@@ -482,18 +485,15 @@ describe('Emitter', () => {
       expect(callback3).not.toHaveBeenCalled()
     })
 
-    it('should return empty Map', () => {
+    it('should return undefined', () => {
       interface Events {
         'test-event': string
       }
       const emitter = new Emitter<Events>()
-      const callback = jest.fn()
 
-      emitter.listen('test-event', callback)
-      const result = emitter.clearAll()
+      emitter.listen('test-event', jest.fn())
 
-      expect(result).toBeInstanceOf(Map)
-      expect(result.size).toBe(0)
+      expect(emitter.clearAll()).toBeUndefined()
     })
 
     it('should prevent callbacks on cleared listeners', () => {
@@ -517,7 +517,7 @@ describe('Emitter', () => {
       expect(callback2).toHaveBeenCalledWith('before-clear')
     })
 
-    it('should not affect cache', () => {
+    it('should clear the cache', () => {
       interface Events {
         'cached-event': string
       }
@@ -526,7 +526,55 @@ describe('Emitter', () => {
       emitter.send('cached-event', 'cached-value')
       emitter.clearAll()
 
-      expect(emitter.getCache('cached-event')).toBe('cached-value')
+      expect(emitter.getCache('cached-event')).toBeUndefined()
+    })
+
+    it('should clear deduplication state', () => {
+      interface Events {
+        count: number
+      }
+      const emitter = new Emitter<Events>({ deduplicatedEvents: [{ event: 'count', comparison: 'deep' }] })
+      const callback = jest.fn()
+
+      emitter.send('count', 42)
+      emitter.clearAll()
+      emitter.listen('count', callback)
+      emitter.send('count', 42)
+
+      expect(callback).toHaveBeenCalledWith(42)
+    })
+
+    it('should stop an emit that is in progress from reaching the removed listeners', () => {
+      interface Events {
+        'test-event': string
+      }
+      const emitter = new Emitter<Events>()
+      const later = jest.fn()
+
+      emitter.listen('test-event', () => emitter.clearAll())
+      emitter.listen('test-event', later)
+      emitter.send('test-event', 'test')
+
+      expect(later).not.toHaveBeenCalled()
+    })
+
+    it('should keep the emitter options', () => {
+      interface Events {
+        count: number
+      }
+      const emitter = new Emitter<Events>({
+        cachedEvents: ['count'],
+        deduplicatedEvents: [{ event: 'count', comparison: 'deep' }],
+      })
+      const callback = jest.fn()
+
+      emitter.clearAll()
+      emitter.listen('count', callback)
+      emitter.send('count', 1)
+      emitter.send('count', 1)
+
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(emitter.getCache('count')).toBe(1)
     })
   })
 
@@ -651,8 +699,7 @@ describe('Emitter', () => {
 
       emitter.listen('test-event', value => {
         callback1(value)
-        // Add listener during emission - it will be called immediately for the current emission
-        // because Set.forEach iterates over newly added items
+        // A listener added during emission only receives later emissions
         if (value === 'test-1') {
           emitter.listen('test-event', callback2)
         }
@@ -661,12 +708,9 @@ describe('Emitter', () => {
       emitter.send('test-event', 'test-1')
       emitter.send('test-event', 'test-2')
 
-      // callback1 is called twice (once for each send)
       expect(callback1).toHaveBeenCalledTimes(2)
-      // callback2 is called twice:
-      // - once immediately during test-1 emission (Set.forEach continues with new items)
-      // - once during test-2 emission
-      expect(callback2).toHaveBeenCalledTimes(2)
+      expect(callback2).toHaveBeenCalledTimes(1)
+      expect(callback2).toHaveBeenCalledWith('test-2')
     })
 
     it('should handle listener removed during event emission', () => {
@@ -677,18 +721,18 @@ describe('Emitter', () => {
       const callback1 = jest.fn()
       const callback2 = jest.fn()
 
-      const listener2 = emitter.listen('test-event', callback2)
       emitter.listen('test-event', () => {
         callback1()
-        // Remove listener during emission
+        // Remove a later listener during emission
         listener2.clearListener()
       })
+      const listener2 = emitter.listen('test-event', callback2)
 
       emitter.send('test-event', 'test')
 
       expect(callback1).toHaveBeenCalledTimes(1)
-      // callback2 might or might not be called depending on iteration order
-      // This tests that it doesn't throw
+      // A listener removed during emission is not called, even if it was registered before the emission started
+      expect(callback2).not.toHaveBeenCalled()
     })
 
     it('should handle recursive event sending', () => {
@@ -778,15 +822,42 @@ describe('Emitter', () => {
       })
       const normalCallback = jest.fn()
 
+      const rethrows: (() => void)[] = []
+      const queueMicrotaskSpy = jest
+        .spyOn(globalThis, 'queueMicrotask')
+        .mockImplementation(task => void rethrows.push(task))
+
       emitter.listen('test-event', errorCallback)
       emitter.listen('test-event', normalCallback)
 
       expect(() => {
         emitter.send('test-event', 'test')
-      }).toThrow('Callback error')
+      }).not.toThrow()
 
-      // Note: The error will stop execution, so normalCallback might not be called
-      // This behavior is expected - the emitter doesn't catch errors
+      expect(normalCallback).toHaveBeenCalledWith('test')
+
+      // The error is re-thrown in a microtask, so it still reaches global error handlers
+      expect(rethrows).toHaveLength(1)
+      expect(rethrows[0]).toThrow('Callback error')
+
+      queueMicrotaskSpy.mockRestore()
+    })
+
+    it('should still update the cache when a listener throws', () => {
+      interface Events {
+        'test-event': string
+      }
+      const emitter = new Emitter<Events>({ cachedEvents: ['test-event'] })
+      const queueMicrotaskSpy = jest.spyOn(globalThis, 'queueMicrotask').mockImplementation(() => undefined)
+
+      emitter.listen('test-event', () => {
+        throw new Error('Callback error')
+      })
+      emitter.send('test-event', 'test')
+
+      expect(emitter.getCache('test-event')).toBe('test')
+
+      queueMicrotaskSpy.mockRestore()
     })
 
     it('should handle undefined values', () => {
@@ -1517,6 +1588,64 @@ describe('Emitter', () => {
 
       expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith(false)
+    })
+  })
+
+  describe('Deep comparison of built-in types', () => {
+    const emitsFor = <T>(first: T, second: T) => {
+      const emitter = new Emitter<{ value: T }>({ deduplicatedEvents: [{ event: 'value', comparison: 'deep' }] })
+      const callback = jest.fn()
+
+      emitter.listen('value', callback)
+      emitter.send('value', first)
+      emitter.send('value', second)
+
+      return callback.mock.calls.length
+    }
+
+    it('treats equal Maps as duplicates and different Maps as changes', () => {
+      expect(emitsFor(new Map([['a', { n: 1 }]]), new Map([['a', { n: 1 }]]))).toBe(1)
+      expect(emitsFor(new Map([['a', 1]]), new Map([['a', 2]]))).toBe(2)
+      expect(emitsFor(new Map([['a', 1]]), new Map([['b', 1]]))).toBe(2)
+    })
+
+    it('treats equal Sets as duplicates and different Sets as changes', () => {
+      expect(emitsFor(new Set([1, 2]), new Set([1, 2]))).toBe(1)
+      expect(emitsFor(new Set([1, 2]), new Set([1, 3]))).toBe(2)
+    })
+
+    it('compares Dates by time', () => {
+      expect(emitsFor(new Date(1000), new Date(1000))).toBe(1)
+      expect(emitsFor(new Date(1000), new Date(2000))).toBe(2)
+    })
+
+    it('compares RegExps by source and flags', () => {
+      expect(emitsFor(/a/g, /a/g)).toBe(1)
+      expect(emitsFor(/a/g, /a/i)).toBe(2)
+    })
+
+    it('treats NaN as equal to NaN', () => {
+      expect(emitsFor({ n: NaN }, { n: NaN })).toBe(1)
+    })
+
+    it('compares objects with a custom toString by its result', () => {
+      expect(emitsFor(new URL('https://a.test/x'), new URL('https://a.test/x'))).toBe(1)
+      expect(emitsFor(new URL('https://a.test/x'), new URL('https://a.test/y'))).toBe(2)
+    })
+
+    it('compares null-prototype objects by their keys', () => {
+      const create = (n: number) => Object.assign(Object.create(null), { n })
+
+      expect(emitsFor(create(1), create(1))).toBe(1)
+      expect(emitsFor(create(1), create(2))).toBe(2)
+    })
+
+    it('treats arrays and objects with the same keys as different', () => {
+      expect(emitsFor<unknown>([1], { 0: 1 })).toBe(2)
+    })
+
+    it('treats a missing key and an undefined key as different', () => {
+      expect(emitsFor<{ a?: number; b?: number }>({ a: undefined }, { b: undefined })).toBe(2)
     })
   })
 })
